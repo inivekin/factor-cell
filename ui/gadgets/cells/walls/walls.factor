@@ -1,4 +1,6 @@
-USING: ui.gadgets.grids sequences.zipped math.matrices ;
+USING: accessors arrays assocs kernel math math.matrices
+sequences sequences.zipped ui.gadgets ui.gadgets.grids
+ui.pens.solid ui.theme vectors ;
 IN: ui.gadgets.cells.walls
 
 TUPLE: wall < grid pair ;
@@ -21,6 +23,10 @@ INSTANCE: wall multicellular
 : create-cells-for-row-insert ( pair multicell quot: ( col row -- cell ) -- seq )
   '[ _ [ grid>> matrix-dim 2array ] dip (create-cells-for-insert) ] keep over add-cells
   ; inline
+: create-cell-row ( row-index multicell quot: ( col row -- cell ) -- seq )
+  '[ _ [ grid>> matrix-dim nip <iota> ] dip with map ] keep over add-cells ; inline
+: create-cell-col ( row-index multicell quot: ( col row -- cell ) -- seq )
+  '[ _ [ grid>> matrix-dim drop <iota> ] dip with map ] keep over add-cells ; inline
 
 : create-cells-for-col-insert ( pair multicell quot: ( col row -- cell ) -- seq )
   '[ _ [ grid>> matrix-dim swap 2array ] dip (create-cells-for-insert) ] keep over add-cells
@@ -53,14 +59,24 @@ INSTANCE: wall multicellular
     bi
   ] map
   ; inline
+
+: (insert-cell-row) ( multicell cells insert-idx -- grid' )
+    [ 1vector swap ] dip cut dup increment-cols surround ; inline
+: (insert-cell-col) ( multicell cells insert-idx -- grid' )
+    [ 1vector swap ] dip cut dup increment-rows surround ; inline
+
 PRIVATE>
 
 GENERIC: insert-cells-by-row ( cells col row multi-cell -- )
+GENERIC: insert-cell-row ( cells row-index multi-cell -- )
 GENERIC: insert-cells-by-col ( cells col row multi-cell -- )
+GENERIC: insert-cell-col ( cells col-index multi-cell -- )
 GENERIC: cell-nth ( pair multicell -- cell )
 
 M: multicellular insert-cells-by-row [ grid>> -roll '[ _ insert-rows ] insert-on-index-else-append ] keep grid<< ;
+M: multicellular insert-cell-row [ grid>> -rot (insert-cell-row) ] keep grid<< ;
 M: multicellular insert-cells-by-col [ grid>> flip -roll '[ _ insert-cols ] insert-on-index-else-append flip ] keep grid<< ;
+M: multicellular insert-cell-col [ grid>> flip -rot (insert-cell-col) flip ] keep grid<< ;
 M: multicellular cell-nth grid>> matrix-nth gadget-child ;
 
 : 1matrix ( el -- matrix ) 1vector 1vector ;

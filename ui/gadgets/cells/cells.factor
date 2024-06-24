@@ -1,4 +1,7 @@
-USING: ui.gadgets ui.gadgets.cells.walls ui.gadgets.editors ui.gadgets.frames ui.gadgets.panes ;
+USING: accessors arrays kernel math sequences ui.commands
+ui.gadgets ui.gadgets.borders ui.gadgets.cells.walls
+ui.gadgets.editors ui.gadgets.frames ui.gadgets.grids
+ui.gadgets.panes ui.gestures ;
 IN: ui.gadgets.cells
 
 TUPLE: cell < frame pair ;
@@ -39,7 +42,7 @@ PRIVATE>
 
 : find-wall ( gadget -- wall ) [ wall? ] find-parent ;
 : focus-relative-cell ( cell quot: ( col row -- col row ) -- )
-    '[ pair>> @ ] [ find-wall ] bi cell-nth gadget-child request-focus ; inline
+  '[ pair>> @ ] [ find-wall ] bi cell-nth gadget-child request-focus ; inline
 : new-default-row ( row col -- cell )
   2array <default-cell> ;
 
@@ -78,6 +81,32 @@ M: cellular (insert-cell-below) parent>>
   ;
 : insert-cell-below ( cellular -- ) (insert-cell-below) gadget-child request-focus ;
 
+: insert-row-above ( cellular -- ) parent>>
+  [ pair>> first ] [ find-wall ] bi
+  [ [ new-default-row ] create-cell-row ]
+  [ insert-cell-row ]
+  2bi
+  ;
+: insert-row-below ( cellular -- ) parent>>
+  [ pair>> row-below first ] [ find-wall ] bi
+  [ [ new-default-row ] create-cell-row ]
+  [ insert-cell-row ]
+  2bi
+  ;
+
+: insert-col-before ( cellular -- ) parent>>
+  [ pair>> second ] [ find-wall ] bi
+  [ [ new-default-col ] create-cell-col ]
+  [ insert-cell-col ]
+  2bi
+  ;
+: insert-col-after ( cellular -- ) parent>>
+  [ pair>> col-after second ] [ find-wall ] bi
+  [ [ new-default-col ] create-cell-col ]
+  [ insert-cell-col ]
+  2bi
+  ;
+
 M: cellular focus-cell-above parent>> [ row-above ] focus-relative-cell ;
 M: cellular focus-cell-below parent>> [ row-below ] focus-relative-cell ;
 M: cellular focus-cell-before parent>> [ col-before ] focus-relative-cell ;
@@ -86,6 +115,9 @@ M: cellular focus-cell-after parent>> [ col-after ] focus-relative-cell ;
 : <cells> ( n -- gadget )
   <iota> dup [ 2array <default-cell> ] cartesian-map { 0 0 } <cell-wall> ;
 
+: <amoeba> ( -- gadget )
+  1 <cells> 1matrix { 0 0 } <cell-wall> ;
+
 editor "cell" f {
   { T{ key-down f { C+ } "O" } insert-cell-above }
   { T{ key-down f { C+ } "o" } insert-cell-below }
@@ -93,9 +125,14 @@ editor "cell" f {
   { T{ key-down f { C+ } "a" } insert-cell-after }
 
   { T{ key-down f { C+ } "k" } focus-cell-above }
-  { T{ key-down f { C+ } "l" } focus-cell-after }
+  { T{ key-down f { C+ } "l" } focus-cell-after } ! editor's `select-line` steals this...
   { T{ key-down f { C+ } "h" } focus-cell-before }
   { T{ key-down f { C+ } "j" } focus-cell-below }
+
+  { T{ key-down f { C+ } "-" } insert-row-above }
+  { T{ key-down f { C+ } "_" } insert-row-below }
+  { T{ key-down f { C+ } "[" } insert-col-before }
+  { T{ key-down f { C+ } "]" } insert-col-after }
 } define-command-map
 
 ! "selection" editor 2dup  get-command-at commands>> [ first dup key-down? [ sym>> "l" = ] when ] reject swapd f swap define-command-map
