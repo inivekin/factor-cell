@@ -1,4 +1,4 @@
-USING: math sequences ui.gadgets.cells ui.gadgets.cells.walls.private ;
+USING: math sequences ui.gadgets.cells ui.gadgets.cells.private ui.gadgets.cells.walls.private ;
 IN: ui.gadgets.cells-tests
 
 ! creating new cells for an insert row-wise
@@ -195,7 +195,7 @@ IN: ui.gadgets.cells-tests
   { { { 0 0 } }
     { { 1 0 } } }
 }
-[ { 0 0 } 1 <cells> cell-nth gadget-child [ insert-row-above ] [  find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
+[ { 0 0 } 1 <cells> cell-nth gadget-child [ insert-row-above ] [ find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
 {
   {
     { { 0 0 } { 0 1 } { 0 2 } }
@@ -204,7 +204,7 @@ IN: ui.gadgets.cells-tests
     { { 3 0 } { 3 1 } { 3 2 } }
   }
 }
-[ { 0 2 } 3 <cells> cell-nth gadget-child [ insert-row-above ] [  find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
+[ { 0 2 } 3 <cells> cell-nth gadget-child [ insert-row-above ] [ find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
 {
   {
     { { 0 0 } { 0 1 } { 0 2 } }
@@ -213,13 +213,13 @@ IN: ui.gadgets.cells-tests
     { { 3 0 } { 3 1 } { 3 2 } }
   }
 }
-[ { 0 2 } 3 <cells> cell-nth gadget-child [ insert-row-below ] [  find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
+[ { 0 2 } 3 <cells> cell-nth gadget-child [ insert-row-below ] [ find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
 
 ! inserting a col into the grid
 {
   { { { 0 0 } { 0 1 } } }
 }
-[ { 0 0 } 1 <cells> cell-nth gadget-child [ insert-col-before ] [  find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
+[ { 0 0 } 1 <cells> cell-nth gadget-child [ insert-col-before ] [ find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
 {
   {
     { { 0 0 } { 0 1 } { 0 2 } { 0 3 } }
@@ -227,7 +227,7 @@ IN: ui.gadgets.cells-tests
     { { 2 0 } { 2 1 } { 2 2 } { 2 3 } }
   }
 }
-[ { 0 2 } 3 <cells> cell-nth gadget-child [ insert-col-before ] [  find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
+[ { 0 2 } 3 <cells> cell-nth gadget-child [ insert-col-before ] [ find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
 {
   {
     { { 0 0 } { 0 1 } { 0 2 } { 0 3 } }
@@ -235,4 +235,68 @@ IN: ui.gadgets.cells-tests
     { { 2 0 } { 2 1 } { 2 2 } { 2 3 } }
   }
 }
-[ { 0 2 } 3 <cells> cell-nth gadget-child [ insert-col-after ] [  find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
+[ { 0 2 } 3 <cells> cell-nth gadget-child [ insert-col-after ] [ find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
+
+! embedding cells into cell walls
+{
+  {
+    { { 0 0 } { 0 1 } { 0 2 } }
+    { { 1 0 } { 1 1 } { 1 2 } }
+    { { 2 0 } { 2 1 } { 2 2 } }
+  }
+}
+[ { 1 0 } 3 <cells> cell-nth gadget-child [ embed-cell-in-wall ] [ find-wall parent>> find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
+
+! focussing to cell outside of cell-wall
+{
+  { 0 1 }
+}
+[ 3 <cells> { 1 1 } swap cell-nth [ gadget-child embed-cell-in-wall ] keep [ pair>> row-above ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+{
+  { 1 0 }
+}
+[ 3 <cells> { 1 1 } swap cell-nth [ gadget-child embed-cell-in-wall ] keep [ pair>> col-before ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+{
+  { 1 2 }
+}
+[ 3 <cells> { 1 1 } swap cell-nth [ gadget-child embed-cell-in-wall ] keep [ pair>> col-after ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+{
+  { 2 1 }
+}
+[ 3 <cells> { 1 1 } swap cell-nth [ gadget-child embed-cell-in-wall ] keep [ pair>> row-below ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+
+! focussing limit to wall with no parent
+{
+  { 0 1 }
+}
+[ 3 <cells> { 0 1 } swap [ cell-nth ] keep [ pair>> row-above ] [ find-wall ] bi* (get-relative-cell) pair>> ] unit-test
+{
+  { 2 1 }
+}
+[ 3 <cells> { 2 1 } swap [ cell-nth ] keep [ pair>> row-below ] [ find-wall ] bi* (get-relative-cell) pair>> ] unit-test
+{
+  { 1 0 }
+}
+[ 3 <cells> { 1 0 } swap [ cell-nth ] keep [ pair>> col-before ] [ find-wall ] bi* (get-relative-cell) pair>> ] unit-test
+{
+  { 1 2 }
+}
+[ 3 <cells> { 1 2 } swap [ cell-nth ] keep [ pair>> col-after ] [ find-wall ] bi* (get-relative-cell) pair>> ] unit-test
+
+! focussing limit from embedded cell at edge of cell wall
+{
+  { 0 0 }
+}
+[ { 1 0 } 3 <cells> cell-nth dup gadget-child embed-cell-in-wall [ pair>> col-before ] [ find-wall ] bi (get-relative-cell) gadget-child pair>> ] unit-test
+{
+  { 0 0 }
+}
+[ { 1 2 } 3 <cells> cell-nth dup gadget-child embed-cell-in-wall [ pair>> col-after ] [ find-wall ] bi (get-relative-cell) gadget-child pair>> ] unit-test
+{
+  { 0 0 }
+}
+[ { 0 1 } 3 <cells> cell-nth dup gadget-child embed-cell-in-wall [ pair>> row-above ] [ find-wall ] bi (get-relative-cell) gadget-child pair>> ] unit-test
+{
+  { 0 0 }
+}
+[ { 2 1 } 3 <cells> cell-nth dup gadget-child embed-cell-in-wall [ pair>> row-below ] [ find-wall ] bi (get-relative-cell) gadget-child pair>> ] unit-test

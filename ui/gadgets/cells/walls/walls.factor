@@ -5,10 +5,14 @@ IN: ui.gadgets.cells.walls
 
 TUPLE: wall < grid pair ;
 
+M: wall focusable-child* gadget-child gadget-child ;
+
 MIXIN: multicellular
 INSTANCE: wall multicellular
 
 : matrix-dim ( matrix -- x y ) [ length ] [ first length ] bi ;
+
+: find-wall ( gadget -- wall/f ) [ wall? ] find-parent ;
 
 : add-cells ( multicell cells -- )
   [ add-gadget drop ] with each
@@ -32,14 +36,16 @@ INSTANCE: wall multicellular
   '[ _ [ grid>> matrix-dim swap 2array ] dip (create-cells-for-insert) ] keep over add-cells
   ; inline
 
-<PRIVATE
-: each-cell ( quot: ( cell -- ) -- ) '[ [ gadget-child @ ] each ] each ; inline
-: map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ [ gadget-child @ ] map ] map ; inline
+: each-cell ( quot: ( cell -- ) -- ) '[ [  dup wall? [ gadget-child ] unless @ ] each ] each ; inline
+: map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ [ dup wall? [ gadget-child ] unless @ ] map ] map ; inline
 
+<PRIVATE
 : change-pair-el ( cell n quote: ( n -- n ) -- )
   [ swap pair>> ] dip change-nth ; inline
 : increment-rows ( cells -- ) [ 1 [ 1 + ] change-pair-el ] each-cell ;
 : increment-cols ( cells -- ) [ 0 [ 1 + ] change-pair-el ] each-cell ;
+: decrement-rows ( cells -- ) [ 1 [ 1 - ] change-pair-el ] each-cell ;
+: decrement-cols ( cells -- ) [ 0 [ 1 - ] change-pair-el ] each-cell ;
 
 : insert-rows ( cell row row-id -- cells )
   [ 1vector ] 2dip cut dup 1vector increment-rows surround ;
@@ -65,6 +71,10 @@ INSTANCE: wall multicellular
 : (insert-cell-col) ( multicell cells insert-idx -- grid' )
     [ 1vector swap ] dip cut dup increment-rows surround ; inline
 
+: excise-row-from-grid ( grid index -- grid' excised )
+  cut 1 cut swap [ dup decrement-cols 2array concat ] dip ;
+: excise-col-from-grid ( grid index -- grid' excised )
+  [ flip ] dip cut 1 cut swap [ dup decrement-rows 2array concat flip ] dip ;
 PRIVATE>
 
 GENERIC: insert-cells-by-row ( cells col row multi-cell -- )
@@ -72,6 +82,16 @@ GENERIC: insert-cell-row ( cells row-index multi-cell -- )
 GENERIC: insert-cells-by-col ( cells col row multi-cell -- )
 GENERIC: insert-cell-col ( cells col-index multi-cell -- )
 GENERIC: cell-nth ( pair multicell -- cell )
+
+GENERIC: remove-cell-row ( row-index multi-cell -- )
+: (remove-cell-row) ( pair wall -- )
+  [ swap [ grid>> ] [ first ] bi* excise-row-from-grid ] 2keep nip [ '[ _ remove-gadget ] each ] [ grid<< ] bi ;
+M: multicellular remove-cell-row (remove-cell-row) ;
+
+GENERIC: remove-cell-col ( col-index multi-cell -- )
+: (remove-cell-col) ( pair wall -- )
+  [ swap [ grid>> ] [ second ] bi* excise-col-from-grid ] 2keep nip [ '[ _ remove-gadget ] each ] [ grid<< ] bi ;
+M: multicellular remove-cell-col (remove-cell-col) ;
 
 M: multicellular insert-cells-by-row [ grid>> -roll '[ _ insert-rows ] insert-on-index-else-append ] keep grid<< ;
 M: multicellular insert-cell-row [ grid>> -rot (insert-cell-row) ] keep grid<< ;
