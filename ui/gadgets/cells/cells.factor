@@ -134,10 +134,20 @@ M: cellular focus-cell-below parent>> [ row-below ] focus-relative-cell ;
 M: cellular focus-cell-before parent>> [ col-before ] focus-relative-cell ;
 M: cellular focus-cell-after parent>> [ col-after ] focus-relative-cell ;
 
+M: cellular increase-cell-size ( cellular -- )
+  [ dup font>> dup size>> 1 + >>size clone swap font<< ]
+  [ relayout ]
+  bi ;
+M: cellular decrease-cell-size ( cellular -- )
+  [ dup font>> dup size>> 1 - >>size clone swap font<< ]
+  [ relayout ]
+  bi ;
+
 : embed-in-wall ( cell -- wall )
   [ parent>> 1matrix ] [ pair>> ] [ { 0 0 } >>pair drop ] tri <cell-wall> ;
 M: cellular embed-cell-in-wall [ parent>>
-  [ pair>> ] [ find-wall ] [ [ over <reversed> grid-remove ] dip embed-in-wall ] tri rot <reversed> grid-add drop ] keep request-focus ;
+  [ pair>> ] [ find-wall ] [ [ over <reversed> grid-remove ] dip embed-in-wall ] tri
+  rot <reversed> grid-add drop ] keep request-focus ;
 
 : <cells> ( n -- gadget )
   <iota> dup [ 2array <default-cell> ] cartesian-map f <cell-wall> ;

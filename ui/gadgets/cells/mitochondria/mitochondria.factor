@@ -1,4 +1,4 @@
-USING: ui.commands ui.gadgets.cells.cellular ui.gadgets.cells.metabolics ui.gadgets.editors
+USING: ui.commands ui.gadgets.cells.cellular ui.gadgets.cells.metabolics ui.gadgets.cells.walls ui.gadgets.editors
 ui.gestures ;
 IN: ui.gadgets.cells.mitochondria
 
@@ -30,11 +30,15 @@ mitochondrion "cell" f {
   { T{ key-down f { C+ } "]" } insert-col-after }
 
   { T{ key-down f { C+ } "#" } embed-cell-in-wall }
+  { T{ key-down f { C+ } "%" } transpose-cells }
 
   { T{ key-down f { C+ } ">" } metabolize-rightward }
   { T{ key-down f { C+ } "<" } metabolize-leftward }
   { T{ key-down f { C+ } "v" } metabolize-downward }
   { T{ key-down f { C+ } "^" } metabolize-upward }
+
+  { T{ key-down f { C+ } "UP" } increase-cell-size }
+  { T{ key-down f { C+ } "DOWN" } decrease-cell-size }
 
   ! { T{ key-down f { C+ } "O" } remove-cell-above }
   ! { T{ key-down f { C+ } "o" } remove-cell-below }

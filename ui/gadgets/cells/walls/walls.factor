@@ -36,7 +36,7 @@ INSTANCE: wall multicellular
   '[ _ [ grid>> matrix-dim swap 2array ] dip (create-cells-for-insert) ] keep over add-cells
   ; inline
 
-: each-cell ( quot: ( cell -- ) -- ) '[ [  dup wall? [ gadget-child ] unless @ ] each ] each ; inline
+: each-cell ( cells quot: ( cell -- ) -- ) '[ [ dup wall? [ gadget-child ] unless @ ] each ] each ; inline
 : map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ [ dup wall? [ gadget-child ] unless @ ] map ] map ; inline
 
 <PRIVATE
@@ -98,6 +98,9 @@ M: multicellular insert-cell-row [ grid>> -rot (insert-cell-row) ] keep grid<< ;
 M: multicellular insert-cells-by-col [ grid>> flip -roll '[ _ insert-cols ] insert-on-index-else-append flip ] keep grid<< ;
 M: multicellular insert-cell-col [ grid>> flip -rot (insert-cell-col) flip ] keep grid<< ;
 M: multicellular cell-nth grid>> matrix-nth gadget-child ;
+
+: transpose-cells ( cell -- )
+  find-wall [ grid>> [ dup pair>> <reversed> >>pair drop ] each-cell ] [ dup grid>> flip >>grid relayout ] bi ;
 
 : 1matrix ( el -- matrix ) 1vector 1vector ;
 

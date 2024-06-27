@@ -29,3 +29,6 @@ GENERIC: insert-col-after ( cell -- )
 
 GENERIC: embed-cell-in-wall ( cell -- )
 
+GENERIC: increase-cell-size ( cell -- )
+GENERIC: decrease-cell-size ( cell -- )
+
