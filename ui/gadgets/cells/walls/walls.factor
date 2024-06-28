@@ -1,5 +1,5 @@
 USING: accessors arrays assocs kernel math math.matrices
-sequences sequences.zipped ui.gadgets ui.gadgets.grids
+sequences sequences.zipped ui.gadgets ui.gadgets.grids ui.gadgets.cells.cellular
 ui.pens.solid ui.theme vectors ;
 IN: ui.gadgets.cells.walls
 
@@ -15,8 +15,7 @@ INSTANCE: wall multicellular
 : find-wall ( gadget -- wall/f ) [ wall? ] find-parent ;
 
 : add-cells ( multicell cells -- )
-  [ add-gadget drop ] with each
-  ;
+  [ add-gadget drop ] with each ;
 
 ! all cells not getting the inserted cell must get an appended cell
 :: (create-cells-for-insert) ( pair dim cell-gen: ( col row -- gadget ) -- seq )
@@ -36,10 +35,9 @@ INSTANCE: wall multicellular
   '[ _ [ grid>> matrix-dim swap 2array ] dip (create-cells-for-insert) ] keep over add-cells
   ; inline
 
-: each-cell ( cells quot: ( cell -- ) -- ) '[ [ dup wall? [ gadget-child ] unless @ ] each ] each ; inline
-: map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ [ dup wall? [ gadget-child ] unless @ ] map ] map ; inline
+: each-cell ( cells quot: ( cell -- ) -- ) '[ _ each ] each ; inline
+: map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ _ map ] map ; inline
 
-<PRIVATE
 : change-pair-el ( cell n quote: ( n -- n ) -- )
   [ swap pair>> ] dip change-nth ; inline
 : increment-rows ( cells -- ) [ 1 [ 1 + ] change-pair-el ] each-cell ;
@@ -51,8 +49,13 @@ INSTANCE: wall multicellular
   [ 1vector ] 2dip cut dup 1vector increment-rows surround ;
 
 : insert-cols ( cell col col-id -- cells )
-  [ 1vector ] 2dip cut dup 1vector increment-cols surround
-  ;
+  [ 1vector ] 2dip cut dup 1vector increment-cols surround ;
+
+: append-new-cell-below ( cells inserter: ( -- cell ) -- cells' )
+  call( -- cell ) suffix ;
+
+: append-new-cell-after ( cells inserter: ( -- cell ) -- cells' )
+  call( -- cell ) suffix ;
 
 : append-cell ( cell cells -- cells' )
   swap suffix ;
@@ -75,7 +78,30 @@ INSTANCE: wall multicellular
   cut 1 cut swap [ dup decrement-cols 2array concat ] dip ;
 : excise-col-from-grid ( grid index -- grid' excised )
   [ flip ] dip cut 1 cut swap [ dup decrement-rows 2array concat flip ] dip ;
-PRIVATE>
+
+: matrix-isolate ( matrix idx -- before after selected )
+  cut [ rest ] [ first ] bi ;
+
+: nondestructive-matrix-excise ( inserter: ( cells -- cells' ) grid pair -- grid' excised )
+  rot
+  '[ first matrix-isolate _ dip ] ! splitting columns of split rows
+  [ second matrix-isolate ] ! matrix split by row
+  swap
+  bi
+  [ 2array concat 1vector glue ] dip
+  ; inline
+
+: cell-shifter-upward ( pair grid inserter: ( pair -- cell ) -- shifter: ( cells -- cells' ) )
+  over '[ [ dup 1vector decrement-cols ] _ bi* _ over add-gadget drop suffix ]
+  [ [ second ] [ grid>> matrix-dim drop 1 - ] bi* swap 2array ] dip curry ; inline
+: cell-shifter-leftward ( pair grid inserter: ( pair -- cell ) -- shifter: ( cells -- cells' ) )
+  over '[ [ dup 1vector decrement-rows ] _ bi* _ over add-gadget drop suffix ]
+  [ [ first ] [ grid>> matrix-dim nip 1 - ] bi* 2array ] dip curry ; inline
+
+: excise-cell-from-row ( shifter: ( cells -- cells' ) pair grid -- grid' excised )
+  swap <reversed> nondestructive-matrix-excise ; inline
+: excise-cell-from-col ( shifter: ( cells -- cells' ) pair grid -- grid' excised )
+  flip swap nondestructive-matrix-excise [ flip ] dip ; inline
 
 GENERIC: insert-cells-by-row ( cells col row multi-cell -- )
 GENERIC: insert-cell-row ( cells row-index multi-cell -- )
@@ -97,7 +123,7 @@ M: multicellular insert-cells-by-row [ grid>> -roll '[ _ insert-rows ] insert-on
 M: multicellular insert-cell-row [ grid>> -rot (insert-cell-row) ] keep grid<< ;
 M: multicellular insert-cells-by-col [ grid>> flip -roll '[ _ insert-cols ] insert-on-index-else-append flip ] keep grid<< ;
 M: multicellular insert-cell-col [ grid>> flip -rot (insert-cell-col) flip ] keep grid<< ;
-M: multicellular cell-nth grid>> matrix-nth gadget-child ;
+M: multicellular cell-nth grid>> matrix-nth ;
 
 : transpose-cells ( cell -- )
   find-wall [ grid>> [ dup pair>> <reversed> >>pair drop ] each-cell ] [ dup grid>> flip >>grid relayout ] bi ;
