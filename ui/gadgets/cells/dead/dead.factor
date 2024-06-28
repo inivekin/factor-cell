@@ -20,3 +20,5 @@ M: dead focusable-child* gadget-child ;
 : new-default-col ( col row -- cell )
   swap new-default-row ;
 
+: <default-cell> ( pair -- gadget ) <dead-cell> ;
+

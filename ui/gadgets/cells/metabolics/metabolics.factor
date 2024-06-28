@@ -82,28 +82,43 @@ MIXIN: metabolic
   [ pprint ] with-string-writer swap cell-genome set-editor-string
   ;
 
-DEFER: marshall-type-out
-: matrix>cells ( matrix pair inserter: ( pair -- cell ) -- multicellular )
-  '[ [ matrix-dim [ <iota> ] bi@ [ 2array @ ] cartesian-map dup ]
-  [ [ [ marshall-type-out ] 2each ] 2each ] bi ] dip
-  <cell-wall> ; inline
-
 : replace-cell ( cell replacement -- )
   [ swap pair>> >>pair drop ]
   [ over parent>> swap dup pair>> <reversed> grid-add remove-gadget ]
   2bi
   ;
 
+DEFER: marshall-type-out
+: matrix>cells ( cell matrix inserter: ( pair -- cell ) -- multicellular )
+  '[ matrix-dim 2dup [ zero? ] bi@ or [ B ] when [ <iota> ] bi@ [ 2array @ ] cartesian-map f <cell-wall> [ replace-cell ] keep grid>> ]
+  [ [ [ marshall-type-out ] 2each ] 2each ] bi
+  ; inline
+
+: tuple>cells ( cell obj inserter: ( pair -- cell ) -- multicellular )
+  [ [ class-of 1array ]
+  [ tuple>assoc 1array ]
+  bi 2array ] dip matrix>cells ; inline
+
+SYMBOL: recursion-check
 : marshall-type-out ( cell obj -- )
-  {
-    { [ dup matrix? ] [ over pair>> [ <default-cell> ] matrix>cells replace-cell ] }
-    ! { [ dup tuple? ] [ expand-tuple-to-treecell ] }
-    [ set-cell ]
-  } cond
+  dup recursion-check get member-eq?
+  [
+    drop "~cirularity~" set-cell ! TODO once cell interlinking works, insert the reference so these can be parsed back in
+  ]
+  [
+    dup recursion-check get push
+    {
+      { [ dup { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ] [ [ <default-cell> ] matrix>cells ] }
+      { [ dup tuple? ] [ [ <default-cell> ] tuple>cells ] }
+      { [ dup { [ array? ] [ empty? not ] } 1&& ] [ 1array [ <default-cell> ] matrix>cells ] }
+      [ set-cell ]
+    } cond
+    recursion-check get pop*
+  ] if
   ;
 
 : set-output-cells ( out-cells datastack -- )
-  [ marshall-type-out ] 2each
+  V{ } clone recursion-check [ [ marshall-type-out ] 2each ] with-variable
   ;
 
 : metabolize-rightward ( cell -- )

@@ -13,8 +13,6 @@ INSTANCE: dead cell
 
 INSTANCE: wall cell
 
-: <default-cell> ( pair -- gadget ) <dead-cell> ;
-
 : new-default-row ( row col -- cell )
   2array <default-cell> ;
 
@@ -179,5 +177,14 @@ dead "spasm" f {
   { T{ key-down f { C+ } "<" } metabolize-leftward }
   { T{ key-down f { C+ } "v" } metabolize-downward }
   { T{ key-down f { C+ } "^" } metabolize-upward }
+} define-command-map
+
+: dye-cell ( cell -- )
+  selection-color <solid> >>boundary relayout-1 ;
+: undye-cell ( cell -- )
+  f >>boundary relayout-1 ;
+dead "selection" f {
+  { gain-focus dye-cell }
+  { lose-focus undye-cell }
 } define-command-map
 
