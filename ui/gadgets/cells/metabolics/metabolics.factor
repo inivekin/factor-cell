@@ -90,7 +90,7 @@ MIXIN: metabolic
 
 DEFER: marshall-type-out
 : matrix>cells ( cell matrix inserter: ( pair -- cell ) -- multicellular )
-  '[ matrix-dim 2dup [ zero? ] bi@ or [ B ] when [ <iota> ] bi@ [ 2array @ ] cartesian-map f <cell-wall> [ replace-cell ] keep grid>> ]
+  '[ matrix-dim [ <iota> ] bi@ [ 2array @ ] cartesian-map f <cell-wall> [ replace-cell ] keep grid>> ]
   [ [ [ marshall-type-out ] 2each ] 2each ] bi
   ; inline
 
