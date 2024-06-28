@@ -136,7 +136,7 @@ M: cell embed-cell-in-wall [
   rot <reversed> grid-add drop ] keep request-focus ;
 
 : <cells> ( n -- gadget )
-  <iota> dup [ 2array <default-cell> ] cartesian-map f <cell-wall> ;
+  <iota> dup [ 2array <default-cell> ] cartesian-map { 0 0 } <cell-wall> ;
 
 : <amoeba> ( -- gadget )
   1 <cells> 1matrix f <cell-wall> ;

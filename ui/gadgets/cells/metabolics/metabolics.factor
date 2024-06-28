@@ -67,7 +67,7 @@ MIXIN: metabolic
 : marshall-cell-type-in ( cell -- x )
   {
     { [ dup dead? ] [ gadget-child gadget-child editor-string [ parse-string call( -- x ) ] with-interactive-vocabs ] }
-    { [ dup wall? ] [ grid>> marshall-cell-type-in ] }
+    { [ dup wall? ] [ grid>> [ marshall-cell-type-in ] map-cells ] }
     [ [ pprint-short ] with-string-writer " unknown cell type can't be marshalled in" append throw ]
   } cond ; recursive
 
@@ -83,8 +83,23 @@ MIXIN: metabolic
   ;
 
 DEFER: marshall-type-out
+: matrix>cells ( matrix pair inserter: ( pair -- cell ) -- multicellular )
+  '[ [ matrix-dim [ <iota> ] bi@ [ 2array @ ] cartesian-map dup ]
+  [ [ [ marshall-type-out ] 2each ] 2each ] bi ] dip
+  <cell-wall> ; inline
+
+: replace-cell ( cell replacement -- )
+  [ swap pair>> >>pair drop ]
+  [ over parent>> swap dup pair>> <reversed> grid-add remove-gadget ]
+  2bi
+  ;
+
 : marshall-type-out ( cell obj -- )
-  set-cell
+  {
+    { [ dup matrix? ] [ over pair>> [ <default-cell> ] matrix>cells replace-cell ] }
+    ! { [ dup tuple? ] [ expand-tuple-to-treecell ] }
+    [ set-cell ]
+  } cond
   ;
 
 : set-output-cells ( out-cells datastack -- )

@@ -51,12 +51,6 @@ INSTANCE: wall multicellular
 : insert-cols ( cell col col-id -- cells )
   [ 1vector ] 2dip cut dup 1vector increment-cols surround ;
 
-: append-new-cell-below ( cells inserter: ( -- cell ) -- cells' )
-  call( -- cell ) suffix ;
-
-: append-new-cell-after ( cells inserter: ( -- cell ) -- cells' )
-  call( -- cell ) suffix ;
-
 : append-cell ( cell cells -- cells' )
   swap suffix ;
 
@@ -132,3 +126,4 @@ M: multicellular cell-nth grid>> matrix-nth ;
 
 : <cell-wall> ( children pair -- gadget )
   swap wall new-grid dim-color <solid> >>boundary swap >>pair ;
+
