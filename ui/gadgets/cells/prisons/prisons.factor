@@ -48,7 +48,7 @@ TUPLE: prison < button pair bunk ;
   ;
 
 : toggle-prison ( cell -- )
-  dup prison? [ bail-out ] [ find-wall imprison ] if drop
+  dup prison? [ bail-out ] [ find-wall imprison ] if request-focus
   ;
 
 : dye-cell ( cell -- )

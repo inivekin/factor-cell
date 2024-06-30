@@ -81,7 +81,7 @@ MIXIN: metabolic
   2 [ gadget-child ] times ;
 
 : set-cell ( cell obj -- )
-  [ pprint ] with-string-writer swap cell-genome set-editor-string
+  [ [ pprint ] without-limits ] with-string-writer swap cell-genome set-editor-string
   ;
 
 : replace-cell ( cell replacement -- )

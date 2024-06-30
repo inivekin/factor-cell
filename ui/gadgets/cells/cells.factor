@@ -144,14 +144,14 @@ M: cell imprison-cell [
 : <amoeba> ( -- gadget )
   1 <cells> 1matrix f <cell-wall> ;
 
-dead "movement" f {
+{ dead prison } [ "movement" f {
   { T{ key-down f { C+ } "k" } focus-cell-above }
   { T{ key-down f { C+ } "l" } focus-cell-after }
   { T{ key-down f { C+ } "h" } focus-cell-before }
   { T{ key-down f { C+ } "j" } focus-cell-below }
-} define-command-map
+} define-command-map ] each
 
-dead "mutation" f {
+{ dead prison } [ "mutation" f {
   { T{ key-down f { C+ } "|" } remove-col }
   { T{ key-down f { C+ } "-" } remove-row }
 
@@ -176,7 +176,7 @@ dead "mutation" f {
   ! { T{ key-down f { C+ } "L" } clone-cell-after }
   ! { T{ key-down f { C+ } "H" } clone-cell-before }
   ! { T{ key-down f { C+ } "J" } clone-cell-below }
-} define-command-map
+} define-command-map ] each
 
 dead "spasm" f {
   { T{ key-down f { C+ } ">" } metabolize-rightward }
@@ -189,8 +189,9 @@ dead "spasm" f {
   selection-color <solid> >>boundary relayout-1 ;
 : undye-cell ( cell -- )
   f >>boundary relayout-1 ;
-dead "selection" f {
+{ dead prison } [ "selection" f {
   { gain-focus dye-cell }
   { lose-focus undye-cell }
-} define-command-map
+} define-command-map ] each
 
+MAIN-WINDOW: factor-cell { { title "cells" } } <amoeba> <scroller> content-background <solid> >>interior >>gadgets ;

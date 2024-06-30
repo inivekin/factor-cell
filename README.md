@@ -50,10 +50,11 @@ TODO-features:
 
 TODO-bugs:
 - fix your broken tests
-- hard to see level of cell wall ewbedding (i.e. cannot insert cell outside cell wall when at edge of cell or navigate cell levels with precision )
+- hard to see level of cell wall embedding (i.e. cannot insert cell outside cell wall when at edge of cell or navigate cell levels with precision )
 - figure out keybindings and if modal editting behaviour is wanted (depends on how selection should work)
 - re-parse tuple-organised outputs properly when used as input
 - prison cells can be more informative on what is inside when collapsed
+    - give prison cells a prison window (scrollable fixed-width)
 - keep removing rows/columns until all gone you are left with an unuseful void in the grid
 
 ![a bad and unfunny maymay](./imgs/stack-pilled.jpg)
