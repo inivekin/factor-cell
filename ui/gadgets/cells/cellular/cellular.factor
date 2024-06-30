@@ -32,7 +32,8 @@ GENERIC: insert-row-below ( cell -- )
 GENERIC: insert-col-before ( cell -- )
 GENERIC: insert-col-after ( cell -- )
 
-GENERIC: embed-cell-in-wall ( cell -- )
+GENERIC: embed-cell ( cell -- )
+GENERIC: imprison-cell ( cell -- )
 
 GENERIC: increase-cell-size ( cell -- )
 GENERIC: decrease-cell-size ( cell -- )

@@ -3,7 +3,7 @@ sequences sequences.zipped ui.gadgets ui.gadgets.grids ui.gadgets.cells.cellular
 ui.pens.solid ui.theme vectors ;
 IN: ui.gadgets.cells.walls
 
-TUPLE: wall < frame pair ;
+TUPLE: wall < grid pair ;
 
 M: wall focusable-child* gadget-child gadget-child ;
 

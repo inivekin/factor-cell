@@ -1,11 +1,12 @@
-USING: accessors arrays combinators combinators.short-circuit
-compiler.cfg.stacks.global continuations eval io.streams.string
-kernel listener math math.matrices math.order prettyprint
-sequences stack-checker ui.commands ui.gadgets
-ui.gadgets.cells.cellular ui.gadgets.cells.dead
+USING: accessors arrays classes combinators
+combinators.short-circuit
+continuations eval io.streams.string kernel listener math
+math.matrices math.order namespaces prettyprint
+prettyprint.backend sequences stack-checker ui.commands
+ui.gadgets ui.gadgets.cells.cellular ui.gadgets.cells.dead
 ui.gadgets.cells.genomes ui.gadgets.cells.membranes
-ui.gadgets.cells.walls ui.gadgets.editors ui.gadgets.grids
-ui.gadgets.panes ;
+ui.gadgets.cells.prisons ui.gadgets.cells.walls
+ui.gadgets.editors ui.gadgets.grids ui.gadgets.panes ;
 FROM: ui.gadgets.cells.dead => dead? ;
 IN: ui.gadgets.cells.metabolics
 
@@ -64,15 +65,15 @@ MIXIN: metabolic
   [ '[ _ _ metabolic-col second cut ] 2dip swap metabolic-pathway-split ]
   3bi ;
 
-: marshall-cell-type-in ( cell -- x )
+: absorb ( cell -- x )
   {
     { [ dup dead? ] [ gadget-child gadget-child editor-string [ parse-string call( -- x ) ] with-interactive-vocabs ] }
-    { [ dup wall? ] [ grid>> [ marshall-cell-type-in ] map-cells ] }
+    { [ dup wall? ] [ grid>> [ absorb ] map-cells ] }
     [ [ pprint-short ] with-string-writer " unknown cell type can't be marshalled in" append throw ]
   } cond ; recursive
 
 : metabolize ( in-stack quot cell -- out-stack )
-  [ [ marshall-cell-type-in ] map ] 2dip
+  [ [ absorb ] map ] 2dip
   gadget-child children>> second [ with-datastack ] with-pane ;
 
 : cell-genome ( cell -- genome )
@@ -88,19 +89,19 @@ MIXIN: metabolic
   2bi
   ;
 
-DEFER: marshall-type-out
-: matrix>cells ( cell matrix inserter: ( pair -- cell ) -- multicellular )
-  '[ matrix-dim [ <iota> ] bi@ [ 2array @ ] cartesian-map f <cell-wall> [ replace-cell ] keep grid>> ]
-  [ [ [ marshall-type-out ] 2each ] 2each ] bi
+DEFER: excrete
+: matrix>cells ( cell matrix inserter: ( pair -- cell ) auto-collapse? -- multicellular )
+  '[ matrix-dim [ <iota> ] bi@ [ 2array @ ] cartesian-map f <cell-wall> [ replace-cell ] [ _ [ imprison ] when drop ] [ grid>> ] tri ]
+  [ [ [ excrete ] 2each ] 2each ] bi
   ; inline
 
 : tuple>cells ( cell obj inserter: ( pair -- cell ) -- multicellular )
   [ [ class-of 1array ]
   [ tuple>assoc 1array ]
-  bi 2array ] dip matrix>cells ; inline
+  bi 2array ] dip f matrix>cells ; inline
 
 SYMBOL: recursion-check
-: marshall-type-out ( cell obj -- )
+: excrete ( cell obj -- )
   dup recursion-check get member-eq?
   [
     drop "~cirularity~" set-cell ! TODO once cell interlinking works, insert the reference so these can be parsed back in
@@ -108,9 +109,9 @@ SYMBOL: recursion-check
   [
     dup recursion-check get push
     {
-      { [ dup { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ] [ [ <default-cell> ] matrix>cells ] }
+      { [ dup { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ] [ [ <default-cell> ] t matrix>cells ] }
       { [ dup tuple? ] [ [ <default-cell> ] tuple>cells ] }
-      { [ dup { [ array? ] [ empty? not ] } 1&& ] [ 1array [ <default-cell> ] matrix>cells ] }
+      { [ dup { [ array? ] [ empty? not ] } 1&& ] [ 1array [ <default-cell> ] t matrix>cells ] }
       [ set-cell ]
     } cond
     recursion-check get pop*
@@ -118,7 +119,7 @@ SYMBOL: recursion-check
   ;
 
 : set-output-cells ( out-cells datastack -- )
-  V{ } clone recursion-check [ [ marshall-type-out ] 2each ] with-variable
+  V{ } clone recursion-check [ [ excrete ] 2each ] with-variable
   ;
 
 : metabolize-rightward ( cell -- )

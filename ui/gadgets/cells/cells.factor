@@ -3,14 +3,16 @@ kernel math math.order sequences ui.commands ui.gadgets
 ui.gadgets.borders ui.gadgets.cells.cellular
 ui.gadgets.cells.dead ui.gadgets.cells.genomes
 ui.gadgets.cells.membranes ui.gadgets.cells.metabolics
-ui.gadgets.cells.walls ui.gadgets.grids ui.gestures ;
+ui.gadgets.cells.prisons ui.gadgets.cells.walls ui.gadgets.grids
+ui.gestures ui.pens.solid ui.theme ;
 IN: ui.gadgets.cells
 
 MIXIN: cell
 
-INSTANCE: dead metabolic
-INSTANCE: dead cell
+INSTANCE: dead metabolic ! it's... alive!!!
 
+INSTANCE: dead cell
+INSTANCE: prison cell
 INSTANCE: wall cell
 
 : new-default-row ( row col -- cell )
@@ -129,8 +131,11 @@ M: cell focus-cell-after [ col-after ] focus-relative-cell ;
 
 : embed-in-wall ( cell -- wall )
   [ 1matrix ] [ pair>> ] [ { 0 0 } >>pair drop ] tri <cell-wall> ;
-M: cell embed-cell-in-wall [
+M: cell embed-cell [
   [ pair>> ] [ find-wall ] [ [ over <reversed> grid-remove ] dip embed-in-wall ] tri
+  rot <reversed> grid-add drop ] keep request-focus ;
+M: cell imprison-cell [
+  [ pair>> ] [ find-wall ] [ [ over <reversed> grid-remove ] dip imprison ] tri
   rot <reversed> grid-add drop ] keep request-focus ;
 
 : <cells> ( n -- gadget )
@@ -163,8 +168,9 @@ dead "mutation" f {
   { T{ key-down f { C+ } "i" } insert-cell-before }
   { T{ key-down f { C+ } "a" } insert-cell-after }
 
-  { T{ key-down f { C+ } "#" } embed-cell-in-wall }
+  { T{ key-down f { C+ } "#" } embed-cell }
   { T{ key-down f { C+ } "%" } transpose-cells }
+  { T{ key-down f { C+ } "#" } toggle-prison }
 
   ! { T{ key-down f { C+ } "K" } clone-cell-above }
   ! { T{ key-down f { C+ } "L" } clone-cell-after }
