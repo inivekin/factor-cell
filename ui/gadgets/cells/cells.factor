@@ -168,7 +168,7 @@ dead "mutation" f {
   { T{ key-down f { C+ } "i" } insert-cell-before }
   { T{ key-down f { C+ } "a" } insert-cell-after }
 
-  { T{ key-down f { C+ } "#" } embed-cell }
+  { T{ key-down f { C+ } "@" } embed-cell }
   { T{ key-down f { C+ } "%" } transpose-cells }
   { T{ key-down f { C+ } "#" } toggle-prison }
 

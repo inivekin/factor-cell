@@ -245,25 +245,25 @@ IN: ui.gadgets.cells-tests
     { { 2 0 } { 2 1 } { 2 2 } }
   }
 }
-[ { 1 0 } 3 <cells> cell-nth [ embed-cell-in-wall ] [ find-wall parent>> find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
+[ { 1 0 } 3 <cells> cell-nth [ embed-cell ] [ find-wall parent>> find-wall ] bi grid>> [ pair>> ] map-cells ] unit-test
 
 ! focussing to cell outside of cell-wall
 {
   { 0 1 }
 }
-[ 3 <cells> { 1 1 } swap cell-nth [ embed-cell-in-wall ] keep [ pair>> row-above ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+[ 3 <cells> { 1 1 } swap cell-nth [ embed-cell ] keep [ pair>> row-above ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
 {
   { 1 0 }
 }
-[ 3 <cells> { 1 1 } swap cell-nth [ embed-cell-in-wall ] keep [ pair>> col-before ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+[ 3 <cells> { 1 1 } swap cell-nth [ embed-cell ] keep [ pair>> col-before ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
 {
   { 1 2 }
 }
-[ 3 <cells> { 1 1 } swap cell-nth [ embed-cell-in-wall ] keep [ pair>> col-after ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+[ 3 <cells> { 1 1 } swap cell-nth [ embed-cell ] keep [ pair>> col-after ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
 {
   { 2 1 }
 }
-[ 3 <cells> { 1 1 } swap cell-nth [ embed-cell-in-wall ] keep [ pair>> row-below ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+[ 3 <cells> { 1 1 } swap cell-nth [ embed-cell ] keep [ pair>> row-below ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
 
 ! focussing limit to wall with no parent
 {
@@ -287,17 +287,17 @@ IN: ui.gadgets.cells-tests
 {
   { 1 0 }
 }
-[ { 1 0 } 3 <cells> cell-nth dup embed-cell-in-wall [ pair>> col-before ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+[ { 1 0 } 3 <cells> cell-nth dup embed-cell [ pair>> col-before ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
 {
   { 1 2 }
 }
-[ { 1 2 } 3 <cells> cell-nth dup embed-cell-in-wall [ pair>> col-after ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+[ { 1 2 } 3 <cells> cell-nth dup embed-cell [ pair>> col-after ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
 {
   { 0 1 }
 }
-[ { 0 1 } 3 <cells> cell-nth dup embed-cell-in-wall [ pair>> row-above ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+[ { 0 1 } 3 <cells> cell-nth dup embed-cell [ pair>> row-above ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
 {
   { 2 1 }
 }
-[ { 2 1 } 3 <cells> cell-nth dup embed-cell-in-wall [ pair>> row-below ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
+[ { 2 1 } 3 <cells> cell-nth dup embed-cell [ pair>> row-below ] [ find-wall ] bi (get-relative-cell) pair>> ] unit-test
 
