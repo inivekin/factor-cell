@@ -20,14 +20,15 @@ features:
 
 TODO-features:
 - cells. interlinked.
-    - use @/0 for absolute referencing
-        - &/0 &-a-1 for relative referencing
+    - macro for @/0 for absolute cell referencing
+    - macro for &/0 &-a-1 for relative cell referencing
             - &-a is the left cell, &a is the right
             - &-1 is the above cell, &1 is the below
             - &A1 is diagonally below and right
+            - &a1b2... choose subcells by continuing letter-number pairs
     - & Is current cell contents, @ is top cell contents
         - && Is current cell gadget, @@ is top cell gadget (allows cells to start programming each other/themselves)
-        - &-1-A:1A allow `:` to reference matrices of cells
+    - &-1-A:1A allow `:` to reference matrices of cells
         - (Add a reference for currently focussed cell?)
     - collections of interlinked cells can form functional blocks (stem cells?)
 - cell selection: improving group (cell submatrixing) and group actions (maybe might be better to use cell interlinking?)
