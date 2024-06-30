@@ -10,12 +10,14 @@ Regard:
 ![a bunch of factor cells displaying a factor object sorta nicely](./imgs/3.png)
 
 goal: make treesheets and tiddlywiki kiss while chewing factor-flavoured bubblegum
+
 status: building foundations until cell behaviours can start being written/loaded in themselves
 
 features:
     - dead cells: contain an mitochndria for editting cell genome and viewing cell membrane
     - cell metabolics: so cells can consume and produce other cells by the given function (convert the incells to cellouts)
     - prison cells: so large/nested matrices/objects are collapsible
+
 TODO-features:
     - cells. interlinked.
         - use @/0 for absolute referencing
@@ -44,6 +46,7 @@ TODO-features:
         - threading and updating?
     - splinter cells
         - not sure what this would be but would be a cool name for a thing
+
 TODO-bugs:
     - fix your broken tests
     - hard to see level of cell wall ewbedding (i.e. cannot insert cell outside cell wall when at edge of cell or navigate cell levels with precision )
