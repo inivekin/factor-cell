@@ -69,6 +69,7 @@ MIXIN: metabolic
   {
     { [ dup dead? ] [ gadget-child gadget-child editor-string [ parse-string call( -- x ) ] with-interactive-vocabs ] }
     { [ dup wall? ] [ grid>> [ absorb ] map-cells ] }
+    { [ dup prison? ] [ bunk>> absorb ] }
     [ [ pprint-short ] with-string-writer " unknown cell type can't be marshalled in" append throw ]
   } cond ; recursive
 
