@@ -14,46 +14,46 @@ goal: make treesheets and tiddlywiki kiss while chewing factor-flavoured bubbleg
 status: building foundations until cell behaviours can start being written/loaded in themselves
 
 features:
-    - dead cells: contain an mitochndria for editting cell genome and viewing cell membrane
-    - cell metabolics: so cells can consume and produce other cells by the given function (convert the incells to cellouts)
-    - prison cells: so large/nested matrices/objects are collapsible
+- dead cells: contain an mitochndria for editting cell genome and viewing cell membrane
+- cell metabolics: so cells can consume and produce other cells by the given function (convert the incells to cellouts)
+- prison cells: so large/nested matrices/objects are collapsible
 
 TODO-features:
-    - cells. interlinked.
-        - use @/0 for absolute referencing
-            - &/0 &-a-1 for relative referencing
-                - &-a is the left cell, &a is the right
-                - &-1 is the above cell, &1 is the below
-                - &A1 is diagonally below and right
- 	    - & Is current cell contents, @ is top cell contents
-            - && Is current cell gadget, @@ is top cell gadget (allows cells to start programming each other/themselves)
-            - &-1-A:1A allow `:` to reference matrices of cells
-            - (Add a reference for currently focussed cell?)
-        - collections of interlinked cells can form functional blocks (stem cells?)
-    - cell selection: improving group (cell submatrixing) and group actions (maybe might be better to use cell interlinking?)
-    - serialise to some standard format (html? org-mode? can just save as factor code or object>bytes for now. call it a colony file?)
-    - live cells
-        - the current dead cells only present text that needs reparsing, allow cells that are a refernce to be conserved (and presented in a pane?)
-    - a stringy cell
-        - for text formatting (italics/bold/underline/font?) and try to have this reflow/softwrap text
-    - cell imaging
-        - pngs or jpegs (maybe svgs later)
-    - cancer cells
-        - special hidden cells to manage special state that would surely become an issue if not monitored...
-    - cryogenics
-        - a hashmap for cells you want connected but not displayed. searchable by fuzzy menu
-    - autonomous cells?
-        - threading and updating?
-    - splinter cells
-        - not sure what this would be but would be a cool name for a thing
+- cells. interlinked.
+    - use @/0 for absolute referencing
+        - &/0 &-a-1 for relative referencing
+            - &-a is the left cell, &a is the right
+            - &-1 is the above cell, &1 is the below
+            - &A1 is diagonally below and right
+    - & Is current cell contents, @ is top cell contents
+        - && Is current cell gadget, @@ is top cell gadget (allows cells to start programming each other/themselves)
+        - &-1-A:1A allow `:` to reference matrices of cells
+        - (Add a reference for currently focussed cell?)
+    - collections of interlinked cells can form functional blocks (stem cells?)
+- cell selection: improving group (cell submatrixing) and group actions (maybe might be better to use cell interlinking?)
+- serialise to some standard format (html? org-mode? can just save as factor code or object>bytes for now. call it a colony file?)
+- live cells
+    - the current dead cells only present text that needs reparsing, allow cells that are a refernce to be conserved (and presented in a pane?)
+- a stringy cell
+    - for text formatting (italics/bold/underline/font?) and try to have this reflow/softwrap text
+- cell imaging
+    - pngs or jpegs (maybe svgs later)
+- cancer cells
+    - special hidden cells to manage special state that would surely become an issue if not monitored...
+- cryogenics
+    - a hashmap for cells you want connected but not displayed. searchable by fuzzy menu
+- autonomous cells?
+    - threading and updating?
+- splinter cells
+    - not sure what this would be but would be a cool name for a thing
 
 TODO-bugs:
-    - fix your broken tests
-    - hard to see level of cell wall ewbedding (i.e. cannot insert cell outside cell wall when at edge of cell or navigate cell levels with precision )
-    - figure out keybindings and if modal editting behaviour is wanted (depends on how selection should work)
-    - re-parse tuple-organised outputs properly when used as input
-    - prison cells can be more informative on what is inside when collapsed
-    - keep removing rows/columns until all gone you are left with an unuseful void in the grid
+- fix your broken tests
+- hard to see level of cell wall ewbedding (i.e. cannot insert cell outside cell wall when at edge of cell or navigate cell levels with precision )
+- figure out keybindings and if modal editting behaviour is wanted (depends on how selection should work)
+- re-parse tuple-organised outputs properly when used as input
+- prison cells can be more informative on what is inside when collapsed
+- keep removing rows/columns until all gone you are left with an unuseful void in the grid
 
 ![a bad and unfunny maymay](./imgs/stack-pilled.jpg)
 
