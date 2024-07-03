@@ -1,11 +1,11 @@
-USING: accessors arrays classes combinators
+USING: accessors arrays assocs classes combinators
 combinators.short-circuit
 continuations eval io.streams.string kernel listener math
 math.matrices math.order namespaces prettyprint
 prettyprint.backend sequences stack-checker ui.commands
 ui.gadgets ui.gadgets.cells.cellular ui.gadgets.cells.dead
-ui.gadgets.cells.genomes ui.gadgets.cells.membranes
-ui.gadgets.cells.prisons ui.gadgets.cells.walls
+ui.gadgets.cells.alive ui.gadgets.cells.genomes ui.gadgets.cells.membranes
+ui.gadgets.cells.interlinks ui.gadgets.cells.prisons ui.gadgets.cells.walls
 ui.gadgets.editors ui.gadgets.grids ui.gadgets.panes ;
 FROM: ui.gadgets.cells.dead => dead? ;
 IN: ui.gadgets.cells.metabolics
@@ -14,7 +14,7 @@ IN: ui.gadgets.cells.metabolics
 MIXIN: metabolic
 
 : identify-enzymes ( metabolic -- quot in out )
-  editor-string [ parse-string ] with-interactive-vocabs dup infer [ in>> length ] [ out>> length ] bi ;
+  dup parent>> parent>> absorbing-cell [ editor-string [ parse-string ] with-interactive-vocabs ] with-variable dup infer [ in>> length ] [ out>> length ] bi ;
 
 : lacking-cells-after? ( out cells pair -- n )
   second cut nip length 1 - swap - ;
@@ -65,23 +65,15 @@ MIXIN: metabolic
   [ '[ _ _ metabolic-col second cut ] 2dip swap metabolic-pathway-split ]
   3bi ;
 
-: absorb ( cell -- x )
-  {
-    { [ dup dead? ] [ gadget-child gadget-child editor-string [ parse-string call( -- x ) ] with-interactive-vocabs ] }
-    { [ dup wall? ] [ grid>> [ absorb ] map-cells ] }
-    { [ dup prison? ] [ bunk>> absorb ] }
-    [ [ pprint-short ] with-string-writer " unknown cell type can't be marshalled in" append throw ]
-  } cond ; recursive
-
 : metabolize ( in-stack quot cell -- out-stack )
   [ [ absorb ] map ] 2dip
   gadget-child children>> second [ with-datastack ] with-pane ;
 
-: cell-genome ( cell -- genome )
-  2 [ gadget-child ] times ;
-
-: set-cell ( cell obj -- )
+: set-cell-dead ( cell obj -- )
   [ [ pprint ] without-limits ] with-string-writer swap cell-genome set-editor-string
+  ;
+: set-cell-alive ( cell obj -- )
+  >>ref [ gadget-child ] keep '[ _ ref>> pprint-short ] with-pane
   ;
 
 : replace-cell ( cell replacement -- )
@@ -90,30 +82,50 @@ MIXIN: metabolic
   2bi
   ;
 
+: kill-cell ( cell -- )
+  dup pair>> <dead-cell>
+  [ replace-cell ]
+  [ swap ref>> set-cell-dead ] 2bi
+  ;
+: revive-cell ( cell -- )
+  [ [ dup absorbing-cell [ cell-genome editor-string [ parse-string ] with-interactive-vocabs ] with-variable ] [ pair>> ] bi <alive-cell> ] keep
+  [ swap replace-cell ]
+  [ drop dup ref>> set-cell-alive ] 2bi
+  ;
+
 DEFER: excrete
+SYMBOL: recursion-check
+: expand-cell ( cell -- )
+  [ [ parent>> ] [ pair>> ] bi swap ]
+  [ dup ref>> V{ } clone recursion-check [ excrete ] with-variable ]
+  bi
+  cell-nth request-focus
+  ;
+
 : matrix>cells ( cell matrix inserter: ( pair -- cell ) auto-collapse? -- multicellular )
   '[ matrix-dim [ <iota> ] bi@ [ 2array @ ] cartesian-map f <cell-wall> [ replace-cell ] [ _ [ imprison ] when drop ] [ grid>> ] tri ]
-  [ [ [ excrete ] 2each ] 2each ] bi
+  ! [ [ [ excrete ] 2each ] 2each ] bi ! if recursing
+  [ [ [ set-cell-alive ] 2each ] 2each ] bi ! better to not recurse and require manual expansion?
   ; inline
 
 : tuple>cells ( cell obj inserter: ( pair -- cell ) -- multicellular )
   [ [ class-of 1array ]
-  [ tuple>assoc 1array ]
+  ! [ tuple>assoc 1array ]
+  [ make-mirror [ keys ] [ values ] bi [ 2array ] 2map 1array ]
   bi 2array ] dip f matrix>cells ; inline
 
-SYMBOL: recursion-check
 : excrete ( cell obj -- )
   dup recursion-check get member-eq?
   [
-    drop "~cirularity~" set-cell ! TODO once cell interlinking works, insert the reference so these can be parsed back in
+    set-cell-alive
   ]
   [
     dup recursion-check get push
     {
-      { [ dup { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ] [ [ <default-cell> ] t matrix>cells ] }
+      { [ dup { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ] [ [ <default-cell> ] f matrix>cells ] }
       { [ dup tuple? ] [ [ <default-cell> ] tuple>cells ] }
-      { [ dup { [ array? ] [ empty? not ] } 1&& ] [ 1array [ <default-cell> ] t matrix>cells ] }
-      [ set-cell ]
+      { [ dup { [ array? ] [ empty? not ] } 1&& ] [ 1array [ <default-cell> ] f matrix>cells ] }
+      [ over alive? [ set-cell-alive ] [ set-cell-dead ] if ]
     } cond
     recursion-check get pop*
   ] if

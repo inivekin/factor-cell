@@ -35,6 +35,9 @@ GENERIC: insert-col-after ( cell -- )
 GENERIC: embed-cell ( cell -- )
 GENERIC: imprison-cell ( cell -- )
 
+GENERIC: absorb ( cell -- cell' )
+GENERIC: excrete ( cell -- )
+
 GENERIC: increase-cell-size ( cell -- )
 GENERIC: decrease-cell-size ( cell -- )
 

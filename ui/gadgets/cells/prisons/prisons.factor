@@ -1,13 +1,15 @@
 USING: accessors classes combinators fonts io.streams.string
 kernel make math.parser prettyprint sequences ui.commands
 ui.gadgets ui.gadgets.borders ui.gadgets.buttons
-ui.gadgets.buttons.private ui.gadgets.cells.dead
+ui.gadgets.buttons.private ui.gadgets.cells.cellular ui.gadgets.cells.dead
 ui.gadgets.cells.metabolics ui.gadgets.cells.walls
 ui.gadgets.editors ui.gadgets.grids ui.gestures ui.pens.solid
 ui.theme ;
 IN: ui.gadgets.cells.prisons
 
 TUPLE: prison < button pair bunk ;
+
+M: prison absorb bunk>> absorb ; recursive
 
 : prison-window ( str -- str' )
   "~[" "]" surround ;

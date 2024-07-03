@@ -1,11 +1,17 @@
 USING: accessors arrays assocs kernel math math.matrices
-sequences sequences.zipped ui.gadgets ui.gadgets.grids ui.gadgets.cells.cellular
+sequences sequences.zipped ui.gadgets ui.gadgets.frames ui.gadgets.grids ui.gadgets.cells.cellular
 ui.pens.solid ui.theme vectors ;
 IN: ui.gadgets.cells.walls
 
-TUPLE: wall < grid pair ;
+TUPLE: wall < frame pair ;
 
-M: wall focusable-child* gadget-child gadget-child ;
+M: wall focusable-child* gadget-child ;
+
+: each-cell ( cells quot: ( cell -- ) -- ) '[ _ each ] each ; inline
+: map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ _ map ] map ; inline
+
+M: wall absorb grid>> [ absorb ] map-cells ; recursive
+
 
 MIXIN: multicellular
 INSTANCE: wall multicellular
@@ -34,9 +40,6 @@ INSTANCE: wall multicellular
 : create-cells-for-col-insert ( pair multicell quot: ( col row -- cell ) -- seq )
   '[ _ [ grid>> matrix-dim swap 2array ] dip (create-cells-for-insert) ] keep over add-cells
   ; inline
-
-: each-cell ( cells quot: ( cell -- ) -- ) '[ _ each ] each ; inline
-: map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ _ map ] map ; inline
 
 : change-pair-el ( cell n quote: ( n -- n ) -- )
   [ swap pair>> ] dip change-nth ; inline

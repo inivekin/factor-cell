@@ -12,11 +12,12 @@ MIXIN: cell
 INSTANCE: dead metabolic ! it's... alive!!!
 
 INSTANCE: dead cell
+INSTANCE: alive cell
 INSTANCE: prison cell
 INSTANCE: wall cell
 
 : new-default-row ( row col -- cell )
-  2array <default-cell> ;
+  2array <dead-cell> ;
 
 : new-default-col ( col row -- cell )
   swap new-default-row ;
@@ -138,20 +139,34 @@ M: cell imprison-cell [
   [ pair>> ] [ find-wall ] [ [ over <reversed> grid-remove ] dip imprison ] tri
   rot <reversed> grid-add drop ] keep request-focus ;
 
+: open-cell-in-window ( cell -- )
+  [ content-background <solid> >>interior ] [ pair>> first2 [ number>string ] bi@ ":" glue ] bi open-window ;
+
 : <cells> ( n -- gadget )
-  <iota> dup [ 2array <default-cell> ] cartesian-map { 0 0 } <cell-wall> ;
+  <iota> dup [ 2array <dead-cell> ] cartesian-map { 0 0 } <cell-wall> ;
 
 : <amoeba> ( -- gadget )
   1 <cells> 1matrix f <cell-wall> ;
 
-{ dead prison } [ "movement" f {
+{ dead prison alive wall } [ "movement" f {
   { T{ key-down f { C+ } "k" } focus-cell-above }
   { T{ key-down f { C+ } "l" } focus-cell-after }
   { T{ key-down f { C+ } "h" } focus-cell-before }
   { T{ key-down f { C+ } "j" } focus-cell-below }
+  { T{ key-down f ${ os macosx? M+ A+ ? } "t" } show-active-buttons-popup }
+  { T{ key-down f { C+ } "W" } open-cell-in-window }
 } define-command-map ] each
 
-{ dead prison } [ "mutation" f {
+dead "reviving" f {
+  { T{ key-down f { C+ } "`" } toggle-editor }
+  { T{ key-down f { C+ } "!" } revive-cell }
+} define-command-map
+alive "killing" f {
+  { T{ key-down f { C+ } "!" } kill-cell }
+  { T{ key-down f { C+ } "TAB" } expand-cell }
+} define-command-map
+
+{ dead prison alive wall } [ "mutation" f {
   { T{ key-down f { C+ } "|" } remove-col }
   { T{ key-down f { C+ } "-" } remove-row }
 
@@ -172,10 +187,10 @@ M: cell imprison-cell [
   { T{ key-down f { C+ } "%" } transpose-cells }
   { T{ key-down f { C+ } "#" } toggle-prison }
 
-  ! { T{ key-down f { C+ } "K" } clone-cell-above }
-  ! { T{ key-down f { C+ } "L" } clone-cell-after }
-  ! { T{ key-down f { C+ } "H" } clone-cell-before }
-  ! { T{ key-down f { C+ } "J" } clone-cell-below }
+  ! { T{ key-down f { C+ } "K" } clone-cell-upward }
+  ! { T{ key-down f { C+ } "L" } clone-cell-rightward }
+  ! { T{ key-down f { C+ } "H" } clone-cell-leftward }
+  ! { T{ key-down f { C+ } "J" } clone-cell-downward }
 } define-command-map ] each
 
 dead "spasm" f {
@@ -188,10 +203,19 @@ dead "spasm" f {
 : dye-cell ( cell -- )
   selection-color <solid> >>boundary relayout-1 ;
 : undye-cell ( cell -- )
-  f >>boundary relayout-1 ;
-{ dead prison } [ "selection" f {
+  line-color <solid> >>boundary relayout-1 ;
+
+: tint-cell ( cell -- )
+  line-color <solid> >>interior relayout-1 ;
+: untint-cell ( cell -- )
+  content-background <solid> >>interior relayout-1 ;
+{ alive } [ "selection" f {
   { gain-focus dye-cell }
   { lose-focus undye-cell }
+  { mouse-enter tint-cell }
+  { mouse-leave untint-cell }
+  { T{ button-down f f 1 } request-focus }
 } define-command-map ] each
+
 
 MAIN-WINDOW: factor-cell { { title "cells" } } <amoeba> <scroller> content-background <solid> >>interior >>gadgets ;
