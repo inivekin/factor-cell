@@ -112,3 +112,6 @@ IN: ui.gadgets.cells.walls-tests
 [ { 1 2 } 3 <cells> [ [ <default-cell> ] cell-shifter-leftward ] [ grid>> excise-cell-from-row ] 2bi [ [ pair>> ] map-cells ] [ pair>> ] bi* ] unit-test
 
 
+! 1 <cells> { 0 0 } over cell-nth cell-genome "link-color <solid>" swap set-editor-string
+          ! { 0 0 } over cell-nth metabolize-downward
+          ! { 1 0 } over cell-nth insert-cell-below ! FIXME this puts new cell in subcell, should parent>> out to find wall 

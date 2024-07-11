@@ -9,14 +9,10 @@ M: wall focusable-child* gadget-child ;
 
 : each-cell ( cells quot: ( cell -- ) -- ) '[ _ each ] each ; inline
 : map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ _ map ] map ; inline
-
-M: wall absorb grid>> [ absorb ] map-cells ; recursive
-
+M: wall absorb grid>> dup tuple-as-matrix? [ matrix>tuple ] [ [ absorb ] map-cells ] if ; recursive
 
 MIXIN: multicellular
 INSTANCE: wall multicellular
-
-: matrix-dim ( matrix -- x y ) [ length ] [ first length ] bi ;
 
 : find-wall ( gadget -- wall/f ) [ wall? ] find-parent ;
 
@@ -128,5 +124,5 @@ M: multicellular cell-nth grid>> matrix-nth ;
 : 1matrix ( el -- matrix ) 1vector 1vector ;
 
 : <cell-wall> ( children pair -- gadget )
-  swap wall new-grid dim-color <solid> >>boundary swap >>pair ;
+  swap wall new-grid line-color <solid> >>boundary swap >>pair ;
 

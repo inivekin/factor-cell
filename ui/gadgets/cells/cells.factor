@@ -153,7 +153,7 @@ M: cell imprison-cell [
   { T{ key-down f { C+ } "l" } focus-cell-after }
   { T{ key-down f { C+ } "h" } focus-cell-before }
   { T{ key-down f { C+ } "j" } focus-cell-below }
-  { T{ key-down f ${ os macosx? M+ A+ ? } "t" } show-active-buttons-popup }
+  { T{ key-down f { A+ } "t" } show-active-buttons-popup }
   { T{ key-down f { C+ } "W" } open-cell-in-window }
 } define-command-map ] each
 
@@ -203,7 +203,7 @@ dead "spasm" f {
 : dye-cell ( cell -- )
   selection-color <solid> >>boundary relayout-1 ;
 : undye-cell ( cell -- )
-  line-color <solid> >>boundary relayout-1 ;
+  content-background <solid> >>boundary relayout-1 ;
 
 : tint-cell ( cell -- )
   line-color <solid> >>interior relayout-1 ;

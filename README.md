@@ -13,10 +13,13 @@ goal: make treesheets and tiddlywiki kiss while chewing factor-flavoured bubbleg
 
 status: building foundations until cell behaviours can start being written/loaded in themselves
 
+
 features:
 - dead cells: contain an mitochndria for editting cell genome and viewing cell membrane
 - cell metabolics: so cells can consume and produce other cells by the given function (convert the incells to cellouts)
 - prison cells: so large/nested matrices/objects are collapsible
+- live cells
+    - reference objects that won't be reparsed (and can be expanded for inspection
 
 TODO-features:
 - cells. interlinked.
@@ -31,14 +34,14 @@ TODO-features:
     - &-1-A:1A allow `:` to reference matrices of cells
         - (Add a reference for currently focussed cell?)
     - collections of interlinked cells can form functional blocks (stem cells?)
+- modal selection
 - cell selection: improving group (cell submatrixing) and group actions (maybe might be better to use cell interlinking?)
-- serialise to some standard format (html? org-mode? can just save as factor code or object>bytes for now. call it a colony file?)
-- live cells
-    - the current dead cells only present text that needs reparsing, allow cells that are a refernce to be conserved (and presented in a pane?)
-- a stringy cell
-    - for text formatting (italics/bold/underline/font?) and try to have this reflow/softwrap text
+- serialise to some standard format (html? org-mode? json? can just save as factor code or object>bytes for now. call it a colony file?)
+- get live chart cursor regions nice
 - cell imaging
     - pngs or jpegs (maybe svgs later)
+- a stringy cell
+    - for text formatting (italics/bold/underline/font?) and try to have this reflow/softwrap text
 - cancer cells
     - special hidden cells to manage special state that would surely become an issue if not monitored...
 - cryogenics
@@ -47,6 +50,7 @@ TODO-features:
     - threading and updating?
 - splinter cells
     - not sure what this would be but would be a cool name for a thing
+- change scrollers (and checkboxes) to opengl draws
 
 TODO-bugs:
 - fix your broken tests
@@ -56,6 +60,7 @@ TODO-bugs:
 - prison cells can be more informative on what is inside when collapsed
     - give prison cells a prison window (scrollable fixed-width)
 - keep removing rows/columns until all gone you are left with an unuseful void in the grid
+- calculating thread with shared manifest so USE:s don't need to be plastered everywhere
 
 ![a bad and unfunny maymay](./imgs/stack-pilled.jpg)
 

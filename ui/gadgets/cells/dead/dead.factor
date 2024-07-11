@@ -19,7 +19,7 @@ M: dead absorb dup absorbing-cell [ cell-genome editor-string [ parse-string cal
   <genome> { 0 0 } grid-add
   <membrane> { 0 1 } grid-add
   dead new-border { 1 1 } >>size { 1 1 } >>fill swap >>pair
-  line-color <solid> >>interior
+  code-border-color <solid> >>interior
   ;
 
 ! : <default-cell> ( pair -- gadget ) <dead-cell> ;

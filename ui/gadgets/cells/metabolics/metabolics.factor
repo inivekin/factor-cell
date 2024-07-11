@@ -85,8 +85,10 @@ MIXIN: metabolic
 : kill-cell ( cell -- )
   dup pair>> <dead-cell>
   [ replace-cell ]
-  [ swap ref>> set-cell-dead ] 2bi
+  [ swap ref>> set-cell-dead ]
+  [ request-focus drop ] 2tri
   ;
+! change to metabolize in place? create new output cell an put in its place
 : revive-cell ( cell -- )
   [ [ dup absorbing-cell [ cell-genome editor-string [ parse-string ] with-interactive-vocabs ] with-variable ] [ pair>> ] bi <alive-cell> ] keep
   [ swap replace-cell ]
@@ -108,11 +110,14 @@ SYMBOL: recursion-check
   [ [ [ set-cell-alive ] 2each ] 2each ] bi ! better to not recurse and require manual expansion?
   ; inline
 
-: tuple>cells ( cell obj inserter: ( pair -- cell ) -- multicellular )
-  [ [ class-of 1array ]
+: tuple>matrix ( obj -- matrix )
+  [ class-of 1array ]
   ! [ tuple>assoc 1array ]
   [ make-mirror [ keys ] [ values ] bi [ 2array ] 2map 1array ]
-  bi 2array ] dip f matrix>cells ; inline
+  bi 2array
+  ;
+: tuple>cells ( cell obj inserter: ( pair -- cell ) -- multicellular )
+  [ tuple>matrix ] dip f matrix>cells ; inline
 
 : excrete ( cell obj -- )
   dup recursion-check get member-eq?
@@ -122,7 +127,7 @@ SYMBOL: recursion-check
   [
     dup recursion-check get push
     {
-      { [ dup { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ] [ [ <default-cell> ] f matrix>cells ] }
+      { [ dup non-empty-matrix? ] [ [ <default-cell> ] f matrix>cells ] }
       { [ dup tuple? ] [ [ <default-cell> ] tuple>cells ] }
       { [ dup { [ array? ] [ empty? not ] } 1&& ] [ 1array [ <default-cell> ] f matrix>cells ] }
       [ over alive? [ set-cell-alive ] [ set-cell-dead ] if ]

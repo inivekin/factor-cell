@@ -1,4 +1,4 @@
-USING: arrays kernel math sequences ui.gadgets ;
+USING: arrays classes kernel math sequences ui.gadgets ;
 IN: ui.gadgets.cells.cellular
 
 ! something that can be in a cell
@@ -51,3 +51,19 @@ GENERIC: decrease-cell-size ( cell -- )
 : col-after ( pair -- pair' ) col-after* 2array ;
 : pair* ( pair -- col row ) first2 ;
 
+: non-empty-matrix? ( x -- ? )
+  { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&&
+  ;
+
+: matrix-dim ( matrix -- x y ) [ length ] [ first length ] bi ;
+
+: matrix>tuple ( matrix -- obj )
+  first2 [ first absorb ] bi@ 1 swap col swap slots>tuple
+  ;
+: tuple-as-matrix? ( matrix -- ? )
+  {
+    [ matrix-dim * 2 = ] ! must be 1x2 or 2x1 matrix
+    [ first first absorb class? ]
+    ! [ B second wall? ]
+  } 1&&
+  ;
