@@ -67,3 +67,7 @@ GENERIC: decrease-cell-size ( cell -- )
     ! [ B second wall? ]
   } 1&&
   ;
+
+: tuple>unfiltered-assoc ( obj -- assoc )
+  [ class-of all-slots ] [ tuple-slots ] bi zip [ [ name>> ] dip ] assoc-map ;
+

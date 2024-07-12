@@ -107,13 +107,14 @@ SYMBOL: recursion-check
 : matrix>cells ( cell matrix inserter: ( pair -- cell ) auto-collapse? -- multicellular )
   '[ matrix-dim [ <iota> ] bi@ [ 2array @ ] cartesian-map f <cell-wall> [ replace-cell ] [ _ [ imprison ] when drop ] [ grid>> ] tri ]
   ! [ [ [ excrete ] 2each ] 2each ] bi ! if recursing
-  [ [ [ set-cell-alive ] 2each ] 2each ] bi ! better to not recurse and require manual expansion?
+  [ [ [ set-cell-alive ] 2each ] 2each ] bi ! better to not recurse and require incremental manual expansion?
   ; inline
 
 : tuple>matrix ( obj -- matrix )
   [ class-of 1array ]
   ! [ tuple>assoc 1array ]
-  [ make-mirror [ keys ] [ values ] bi [ 2array ] 2map 1array ]
+  [ ! make-mirror
+      tuple>unfiltered-assoc 1array ]
   bi 2array
   ;
 : tuple>cells ( cell obj inserter: ( pair -- cell ) -- multicellular )

@@ -5,7 +5,8 @@ TUPLE: alive < border pair ref ;
 ! M: alive focusable-child* gadget-child ;
 
 : map-embedded-matrix-tuples ( matrix -- matrix )
-  dup non-empty-matrix? [ [ [ dup { [ non-empty-matrix? ] [ tuple-as-matrix? ] } 1&& [ matrix>tuple ] [ map-embedded-matrix-tuples ] if ] map ] map ] when ; recursive
+  dup non-empty-matrix? [ [ [ dup { [ non-empty-matrix? ] [ tuple-as-matrix? ] } 1&&
+  [ matrix>tuple ] [ map-embedded-matrix-tuples ] if ] map ] map ] when ; recursive
 M: alive absorb ref>> map-embedded-matrix-tuples ;
 
 : <alive-cell> ( obj pair -- gadget )
