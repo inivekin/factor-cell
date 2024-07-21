@@ -5,11 +5,11 @@ ui.gadgets.cells.mitochondria ui.gadgets.frames ui.gadgets.grids
 IN: ui.gadgets.cells.dead
 
 TUPLE: dead < border pair ;
-M: dead focusable-child* gadget-child ;
-
 : cell-genome ( dead -- genome )
   gadget-child { 0 0 } grid-child
   ;
+M: dead focusable-child* cell-genome ;
+
 
 M: dead absorb dup absorbing-cell [ cell-genome editor-string [ parse-string call( -- x ) ] with-interactive-vocabs ] with-variable ;
 

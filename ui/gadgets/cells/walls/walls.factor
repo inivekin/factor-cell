@@ -124,5 +124,5 @@ M: multicellular cell-nth grid>> matrix-nth ;
 : 1matrix ( el -- matrix ) 1vector 1vector ;
 
 : <cell-wall> ( children pair -- gadget )
-  swap wall new-grid line-color <solid> >>boundary swap >>pair ;
+  swap wall new-grid line-color <solid> >>boundary swap >>pair { 2 2 } >>gap ;
 

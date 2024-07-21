@@ -146,7 +146,7 @@ M: cell imprison-cell [
   <iota> dup [ 2array <dead-cell> ] cartesian-map { 0 0 } <cell-wall> ;
 
 : <amoeba> ( -- gadget )
-  1 <cells> 1matrix f <cell-wall> ;
+  1 <cells> f >>pair ;
 
 { dead prison alive wall } [ "movement" f {
   { T{ key-down f { C+ } "k" } focus-cell-above }
@@ -196,7 +196,7 @@ alive "killing" f {
 dead "spasm" f {
   { T{ key-down f { C+ } ">" } metabolize-rightward }
   { T{ key-down f { C+ } "<" } metabolize-leftward }
-  { T{ key-down f { C+ } "v" } metabolize-downward }
+  { T{ key-down f { C+ } "V" } metabolize-downward }
   { T{ key-down f { C+ } "^" } metabolize-upward }
 } define-command-map
 
@@ -209,11 +209,14 @@ dead "spasm" f {
   line-color <solid> >>interior relayout-1 ;
 : untint-cell ( cell -- )
   content-background <solid> >>interior relayout-1 ;
-{ alive } [ "selection" f {
+{ alive wall } [ "highlighting" f {
   { gain-focus dye-cell }
   { lose-focus undye-cell }
   { mouse-enter tint-cell }
   { mouse-leave untint-cell }
+} define-command-map ] each
+
+{ alive } [ "selection" f {
   { T{ button-down f f 1 } request-focus }
 } define-command-map ] each
 

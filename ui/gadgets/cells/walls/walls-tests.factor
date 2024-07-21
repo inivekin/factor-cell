@@ -111,6 +111,10 @@ IN: ui.gadgets.cells.walls-tests
 }
 [ { 1 2 } 3 <cells> [ [ <default-cell> ] cell-shifter-leftward ] [ grid>> excise-cell-from-row ] 2bi [ [ pair>> ] map-cells ] [ pair>> ] bi* ] unit-test
 
+! 3 <cells> { 0 0 } over cell-nth cell-genome "link-color <solid>" swap set-editor-string
+          ! { 0 0 } over cell-nth metabolize-downward
+          ! { 2 0 } over cell-nth cell-genome "." swap set-editor-string
+          ! { 2 0 } over cell-nth metabolize-downward
 
 ! 1 <cells> { 0 0 } over cell-nth cell-genome "link-color <solid>" swap set-editor-string
           ! { 0 0 } over cell-nth metabolize-downward
