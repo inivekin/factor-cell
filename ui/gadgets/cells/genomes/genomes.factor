@@ -26,6 +26,7 @@ M: cellular decrease-cell-size ( cellular -- )
 
 : force-propagate-ctrl-l ( genome -- ) T{ key-down f { C+ } "l" } swap parent>> propagate-gesture ;
 : force-propagate-ctrl-j ( genome -- ) T{ key-down f { C+ } "j" } swap parent>> propagate-gesture ;
+: force-propagate-ctrl-i ( genome -- ) T{ key-down f { C+ } "i" } swap parent>> propagate-gesture ;
 
 genome "cell" f {
   { T{ key-down f { C+ } "UP" } increase-cell-size }
@@ -33,6 +34,7 @@ genome "cell" f {
 
   { T{ key-down f { C+ } "l" } force-propagate-ctrl-l }
   { T{ key-down f { C+ } "j" } force-propagate-ctrl-j }
+  { T{ key-down f { C+ } "i" } force-propagate-ctrl-i }
   { T{ key-down f f "TAB" } code-completion-popup }
 } define-command-map
 

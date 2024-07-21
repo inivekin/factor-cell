@@ -12,7 +12,7 @@ M: alive absorb ref>> map-embedded-matrix-tuples ;
 : <alive-cell> ( obj pair -- gadget )
   <membrane>
   content-background <solid> >>interior
-  alive new-border { 1 1 } >>size { 1 1 } >>fill
+  alive new-border { 0 0 } >>size { 1 1 } >>fill
   swap >>pair
   swap >>ref
   content-background <solid> >>interior
