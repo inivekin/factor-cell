@@ -67,6 +67,12 @@ INSTANCE: wall multicellular
 : (insert-cell-col) ( multicell cells insert-idx -- grid' )
     [ 1vector swap ] dip cut dup increment-rows surround ; inline
 
+: replace-cell ( cell replacement -- )
+  [ swap pair>> >>pair drop ]
+  [ over parent>> swap dup pair>> <reversed> grid-add remove-gadget ]
+  2bi
+  ;
+
 : excise-row-from-grid ( grid index -- grid' excised )
   cut 1 cut swap [ dup decrement-cols 2array concat ] dip ;
 : excise-col-from-grid ( grid index -- grid' excised )
@@ -102,20 +108,46 @@ GENERIC: insert-cells-by-col ( cells col row multi-cell -- )
 GENERIC: insert-cell-col ( cells col-index multi-cell -- )
 GENERIC: cell-nth ( pair multicell -- cell )
 
+: remove-cell-wall-connections ( cells multi-cell -- )
+  model>> '[ _ swap dup dead? [ cell-genome model>> remove-connection ] [ 2drop ] if ] each
+  ;
+
 GENERIC: remove-cell-row ( row-index multi-cell -- )
 : (remove-cell-row) ( pair wall -- )
-  [ swap [ grid>> ] [ first ] bi* excise-row-from-grid ] 2keep nip [ '[ _ remove-gadget ] each ] [ grid<< ] bi ;
+  [ swap first over grid>> row swap remove-cell-wall-connections ]
+  [ [ swap [ grid>> ] [ first ] bi* excise-row-from-grid ] 2keep nip [ '[ _ remove-gadget ] each ] [ grid<< ] bi ]
+  2bi
+  ;
 M: multicellular remove-cell-row (remove-cell-row) ;
 
 GENERIC: remove-cell-col ( col-index multi-cell -- )
 : (remove-cell-col) ( pair wall -- )
-  [ swap [ grid>> ] [ second ] bi* excise-col-from-grid ] 2keep nip [ '[ _ remove-gadget ] each ] [ grid<< ] bi ;
+  [ swap second over grid>> col swap remove-cell-wall-connections ]
+  [ [ swap [ grid>> ] [ second ] bi* excise-col-from-grid ] 2keep nip [ '[ _ remove-gadget ] each ] [ grid<< ] bi ]
+  2bi
+  ;
 M: multicellular remove-cell-col (remove-cell-col) ;
 
-M: multicellular insert-cells-by-row [ grid>> -roll '[ _ insert-rows ] insert-on-index-else-append ] keep grid<< ;
-M: multicellular insert-cell-row [ grid>> -rot (insert-cell-row) ] keep grid<< ;
-M: multicellular insert-cells-by-col [ grid>> flip -roll '[ _ insert-cols ] insert-on-index-else-append flip ] keep grid<< ;
-M: multicellular insert-cell-col [ grid>> flip -rot (insert-cell-col) flip ] keep grid<< ;
+: add-cell-wall-connections ( cells multi-cell -- )
+  model>> '[ _ swap dup dead? [ cell-genome model>> 10 seconds <delay> add-connection ] [ 2drop ] if ] each
+  ;
+
+M: multicellular insert-cells-by-row 
+  [ 2nip add-cell-wall-connections ]
+  [ [ grid>> -roll '[ _ insert-rows ] insert-on-index-else-append ] keep grid<< ]
+  4bi ;
+M: multicellular insert-cell-row 
+  [ nip add-cell-wall-connections ]
+  [ [ grid>> -rot (insert-cell-row) ] keep grid<< ]
+  3bi ;
+M: multicellular insert-cells-by-col 
+  [ 2nip add-cell-wall-connections ]
+  [ [ grid>> flip -roll '[ _ insert-cols ] insert-on-index-else-append flip ] keep grid<< ]
+  4bi ;
+M: multicellular insert-cell-col 
+  [ nip add-cell-wall-connections ]
+  [ [ grid>> flip -rot (insert-cell-col) flip ] keep grid<< ]
+  3bi ;
 M: multicellular cell-nth grid>> matrix-nth ;
 
 : transpose-cells ( cell -- )
@@ -124,5 +156,7 @@ M: multicellular cell-nth grid>> matrix-nth ;
 : 1matrix ( el -- matrix ) 1vector 1vector ;
 
 : <cell-wall> ( children pair -- gadget )
-  swap wall new-grid line-color <solid> >>boundary swap >>pair { 1 1 } >>gap ;
+  swap wall new-grid line-color <solid> >>boundary swap >>pair { 1 1 } >>gap
+  dup children>> [ dead? ] filter [ cell-genome model>> ] map <product> >>model
+  ;
 

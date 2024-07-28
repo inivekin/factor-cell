@@ -1,4 +1,6 @@
-USING: ui.gadgets.borders ui.gadgets.cells.cellular ;
+USING: accessors combinators.short-circuit kernel sequences
+ui.gadgets.borders ui.gadgets.cells.cellular
+ui.gadgets.cells.membranes ui.pens.solid ui.theme ;
 IN: ui.gadgets.cells.alive
 
 TUPLE: alive < border pair ref ;

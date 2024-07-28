@@ -91,13 +91,13 @@ M: cell (insert-cell-below)
 M: cell (remove-cell-shift-col-up)
   [ pair>> ] [ find-wall ] bi
   [ [ <default-cell> ] cell-shifter-upward ]
-  [ [ grid>> excise-cell-from-col swap ] keep [ grid<< ] [ dupd remove-gadget ] bi ]
+  [ [ grid>> excise-cell-from-col swap ] keep [ grid<< ] [ dupd [ remove-gadget ] [ remove-cell-wall-connections ] 2bi ] bi ]
   [ cell-nth [ request-focus ] [ relayout ] bi ] 2tri
   ;
 M: cell (remove-cell-shift-row-left)
   [ pair>> ] [ find-wall ] bi
   [ [ <default-cell> ] cell-shifter-leftward ]
-  [ [ grid>> excise-cell-from-row swap ] keep [ grid<< ] [ dupd remove-gadget ] bi  ]
+  [ [ grid>> excise-cell-from-row swap ] keep [ grid<< ] [ dupd [ remove-gadget ] [ remove-cell-wall-connections ] 2bi ] bi  ]
   [ cell-nth [ request-focus ] [ relayout ] bi ] 2tri
   ;
 

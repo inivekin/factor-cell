@@ -76,12 +76,6 @@ MIXIN: metabolic
   >>ref [ gadget-child ] keep '[ _ ref>> pprint-short ] with-pane
   ;
 
-: replace-cell ( cell replacement -- )
-  [ swap pair>> >>pair drop ]
-  [ over parent>> swap dup pair>> <reversed> grid-add remove-gadget ]
-  2bi
-  ;
-
 : kill-cell ( cell -- )
   dup pair>> <dead-cell>
   [ replace-cell ]
@@ -90,7 +84,7 @@ MIXIN: metabolic
   ;
 ! change to metabolize in place? create new output cell an put in its place
 : revive-cell ( cell -- )
-  [ [ dup absorbing-cell [ cell-genome editor-string [ parse-string ] with-interactive-vocabs ] with-variable ] [ pair>> ] bi <alive-cell> ] keep
+  [ [ dup absorbing-cell [ cell-genome editor-string [ parse-string ] with-interactive-vocabs ] with-variable call( -- x ) ] [ pair>> ] bi <alive-cell> ] keep
   [ swap replace-cell ]
   [ drop dup ref>> set-cell-alive ] 2bi
   ;
