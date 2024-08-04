@@ -139,14 +139,15 @@ M: cell imprison-cell [
   [ pair>> ] [ find-wall ] [ [ over <reversed> grid-remove ] dip imprison ] tri
   rot <reversed> grid-add drop ] keep request-focus ;
 
-: open-cell-in-window ( cell -- )
-  [ content-background <solid> >>interior ] [ pair>> first2 [ number>string ] bi@ ":" glue ] bi open-window ;
-
 : <cells> ( n -- gadget )
   <iota> dup [ 2array <dead-cell> ] cartesian-map { 0 0 } <cell-wall> ;
 
 : <amoeba> ( -- gadget )
   1 <cells> f >>pair ;
+
+: open-cell-in-window ( cell -- )
+  [ tuple>unfiltered-assoc dup [ [ f "parent" ] dip set-at ] [ [ { 0 0 } "pair" ] dip set-at ] bi 1 swap col [ clone ] map ] [ class-of ] bi slots>tuple 1matrix { 0 0 } <cell-wall>
+  [ content-background <solid> >>interior ] [ pair>> first2 [ number>string ] bi@ ":" glue ] bi open-window ;
 
 { dead prison alive wall } [ "movement" f {
   { T{ key-down f { C+ } "k" } focus-cell-above }

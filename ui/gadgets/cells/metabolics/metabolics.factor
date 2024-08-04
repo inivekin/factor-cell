@@ -67,7 +67,8 @@ MIXIN: metabolic
 
 : metabolize ( in-stack quot cell -- out-stack )
   [ [ absorb ] map ] 2dip
-  gadget-child children>> second [ with-datastack ] with-pane ;
+  [ gadget-child { 0 1 } >>filled-cell drop ]
+  [ cell-membrane [ with-datastack ] with-pane ] bi ;
 
 : set-cell-dead ( cell obj -- )
   [ [ pprint ] without-limits ] with-string-writer swap cell-genome set-editor-string

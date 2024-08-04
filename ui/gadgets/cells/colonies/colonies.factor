@@ -10,13 +10,17 @@ IN: ui.gadgets.cells.colonies
 : serialize ( cell -- str )
   {
     { [ dup wall? ] [ grid>> [ [ serialize ] map ] map ] }
-    { [ dup dead? ] [ gadget-text ] }
+    { [ dup dead? ] [ dup gadget-child dormant>> [ nip cell-genome editor-string ] [ cell-genome editor-string ] if* ] }
     { [ dup alive? ] [ ref>> [ pprint ] with-string-writer  ] }
     { [ dup prison? ] [ gadget-text  ] }
     [ "unhandled type on serialization" throw ]
   } cond
   ; recursive
 
+: backup-cell-file ( pathname -- )
+  absolute-path dup [ now ".%y%m%d-%H%M%S" strftime print ] with-string-writer append but-last
+  copy-file
+  ;
 : cell>file ( pathname cell -- )
   serialize [ >json write ] curry utf8 swap with-file-writer ;
 
@@ -36,5 +40,6 @@ DEFER: json-matrix>cells
   binary file-contents >string json> json-matrix>cells f >>pair ;
 
 : open-colony ( pathname -- )
-  [ file>cell ] keep [ present swap <scroller> swap open-window ] [ over [ model>> 10 seconds <delay> spin '[ _ _ cell>file ] <arrow> ] [ model<< ] bi ] 2bi
+  dup [ <amoeba> cell>file ] unless-file-exists
+  [ file>cell ] keep [ present swap <scroller> swap open-window ] [ over [ model>> 10 seconds <delay> spin '[ _ [ backup-cell-file ] [ _ cell>file ] bi ] <arrow> ] [ model<< ] bi ] 2bi
   ;
