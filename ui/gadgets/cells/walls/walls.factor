@@ -5,7 +5,7 @@ IN: ui.gadgets.cells.walls
 
 TUPLE: wall < frame pair ;
 
-M: wall focusable-child* gadget-child ;
+! M: wall focusable-child* gadget-child ;
 
 : each-cell ( cells quot: ( cell -- ) -- ) '[ _ each ] each ; inline
 : map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ _ map ] map ; inline

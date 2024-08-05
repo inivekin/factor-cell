@@ -52,6 +52,11 @@ DEFER: focus-outside-wall-limits?
   } cond
   ;
 
+: focus-cell-in ( cell -- )
+  dup wall? [ { 0 0 } swap cell-nth request-focus ] [ drop ] if ;
+: focus-cell-out ( cell -- )
+  parent>> find-wall request-focus ;
+
 : (get-relative-cell) ( pair wall -- focusable/f )
   [ focus-outside-wall-limits? ] [ '[ _ _ cell-nth ] unless* ] 2bi
   ;
@@ -156,6 +161,8 @@ M: cell imprison-cell [
   { T{ key-down f { C+ } "j" } focus-cell-below }
   { T{ key-down f { A+ } "t" } show-active-buttons-popup }
   { T{ key-down f { C+ } "W" } open-cell-in-window }
+  { T{ key-down f f "ESC" } focus-cell-out }
+  { T{ key-down f f "RET" } focus-cell-in }
 } define-command-map ] each
 
 dead "reviving" f {

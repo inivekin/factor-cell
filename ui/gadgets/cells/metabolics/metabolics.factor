@@ -74,7 +74,7 @@ MIXIN: metabolic
   [ [ pprint ] without-limits ] with-string-writer swap cell-genome set-editor-string
   ;
 : set-cell-alive ( cell obj -- )
-  >>ref [ gadget-child ] keep '[ _ ref>> pprint-short ] with-pane
+  >>ref [ cell-membrane ] keep '[ _ ref>> pprint-short ] with-pane
   ;
 
 : kill-cell ( cell -- )
