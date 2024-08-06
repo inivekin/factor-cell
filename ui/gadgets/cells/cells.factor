@@ -62,47 +62,47 @@ DEFER: focus-outside-wall-limits?
   ;
 
 : focus-relative-cell ( cell quot: ( pair -- pair' ) -- )
-  '[ pair>> @ ] [ find-wall ] bi (get-relative-cell) [ request-focus ] when* ; inline
+  '[ pair>> @ ] [ parent>> find-wall ] bi (get-relative-cell) [ request-focus ] when* ; inline
 
 
 M: cell (insert-cell-before)
-  [ pair>> ] [ find-wall ] bi
+  [ pair>> ] [ parent>> find-wall ] bi
   [ [ new-default-row ] create-cells-for-row-insert ]
   [ [ pair* ] dip insert-cells-by-row ]
   [ [ col-before ] dip cell-nth ] 2tri
   ;
 
 M: cell (insert-cell-after)
-  [ pair>> col-after ] [ find-wall ] bi
+  [ pair>> col-after ] [ parent>> find-wall ] bi
   [ [ new-default-row ] create-cells-for-row-insert ]
   [ [ pair* ] dip insert-cells-by-row ]
   [ cell-nth ] 2tri
   ;
 
 M: cell (insert-cell-above)
-  [ pair>> ] [ find-wall ] bi
+  [ pair>> ] [ parent>> find-wall ] bi
   [ [ <reversed> ] dip [ new-default-col ] create-cells-for-col-insert ]
   [ [ pair* swap ] dip insert-cells-by-col ]
   [ [ row-above ] dip cell-nth ] 2tri
   ;
 
 M: cell (insert-cell-below)
-  [ pair>> row-below ] [ find-wall ] bi
+  [ pair>> row-below ] [ parent>> find-wall ] bi
   [ [ <reversed> ] dip [ new-default-col ] create-cells-for-col-insert ]
   [ [ pair* swap ] dip insert-cells-by-col ]
   [ cell-nth ] 2tri
   ;
 
 M: cell (remove-cell-shift-col-up)
-  [ pair>> ] [ find-wall ] bi
+  [ pair>> ] [ parent>> find-wall ] bi
   [ [ <default-cell> ] cell-shifter-upward ]
-  [ [ grid>> excise-cell-from-col swap ] keep [ grid<< ] [ dupd [ remove-gadget ] [ remove-cell-wall-connections ] 2bi ] bi ]
+  [ [ grid>> excise-cell-from-col swap ] keep [ grid<< ] [ dupd [ remove-gadget ] [ [ 1array ] dip remove-cell-wall-connections ] 2bi ] bi ]
   [ cell-nth [ request-focus ] [ relayout ] bi ] 2tri
   ;
 M: cell (remove-cell-shift-row-left)
-  [ pair>> ] [ find-wall ] bi
+  [ pair>> ] [ parent>> find-wall ] bi
   [ [ <default-cell> ] cell-shifter-leftward ]
-  [ [ grid>> excise-cell-from-row swap ] keep [ grid<< ] [ dupd [ remove-gadget ] [ remove-cell-wall-connections ] 2bi ] bi  ]
+  [ [ grid>> excise-cell-from-row swap ] keep [ grid<< ] [ dupd [ remove-gadget ] [ [ 1array ] dip remove-cell-wall-connections ] 2bi ] bi  ]
   [ cell-nth [ request-focus ] [ relayout ] bi ] 2tri
   ;
 
@@ -138,10 +138,10 @@ M: cell focus-cell-after [ col-after ] focus-relative-cell ;
 : embed-in-wall ( cell -- wall )
   [ 1matrix ] [ pair>> ] [ { 0 0 } >>pair drop ] tri <cell-wall> ;
 M: cell embed-cell [
-  [ pair>> ] [ find-wall ] [ [ over <reversed> grid-remove ] dip embed-in-wall ] tri
+  [ pair>> ] [ parent>> find-wall ] [ [ over <reversed> grid-remove ] dip embed-in-wall ] tri
   rot <reversed> grid-add drop ] keep request-focus ;
 M: cell imprison-cell [
-  [ pair>> ] [ find-wall ] [ [ over <reversed> grid-remove ] dip imprison ] tri
+  [ pair>> ] [ parent>> find-wall ] [ [ over <reversed> grid-remove ] dip imprison ] tri
   rot <reversed> grid-add drop ] keep request-focus ;
 
 : <cells> ( n -- gadget )
