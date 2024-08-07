@@ -158,5 +158,6 @@ M: multicellular cell-nth grid>> matrix-nth ;
 : <cell-wall> ( children pair -- gadget )
   swap wall new-grid line-color <solid> >>boundary swap >>pair { 1 1 } >>gap
   dup children>> [ dead? ] filter [ cell-genome model>> ] map <product> >>model
+  { 1 1 } >>gap
   ;
 

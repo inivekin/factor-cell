@@ -10,6 +10,7 @@ TUPLE: dead < border pair ;
   ;
 : cell-membrane ( dead -- genome )
   gadget-child { 0 1 } grid-child
+  gadget-child
   ;
 M: dead focusable-child* cell-genome ;
 
@@ -21,7 +22,7 @@ M: dead absorb dup absorbing-cell [ cell-genome editor-string [ parse-string cal
   content-background <solid> >>interior
   <genome> { 0 0 } grid-add
   <membrane> { 0 1 } grid-add
-  dead new-border { 0 0 } >>size { 1 1 } >>fill swap >>pair
+  dead new-border { 1 1 } >>size { 1 1 } >>fill swap >>pair
   code-border-color <solid> >>interior
   ;
 
