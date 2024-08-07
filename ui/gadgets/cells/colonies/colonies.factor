@@ -7,10 +7,22 @@ ui.gadgets.cells.prisons ui.gadgets.cells.walls
 ui.gadgets.editors ui.gadgets.scrollers ;
 IN: ui.gadgets.cells.colonies
 
+: serialize-pane ( dead -- bytes )
+  cell-membrane
+      [ tuple>unfiltered-assoc dup [ f "parent" ] dip set-at 1 swap col [ clone ] map ] [ class-of ] bi slots>tuple object>bytes >base64 >string
+  ;
+
+: serialize-genome ( dead -- string )
+  dup gadget-child dormant>> [ nip editor-string ] [ cell-genome editor-string ] if*
+  ;
+:: serialize-dead ( dead -- assoc )
+  H{ } clone :> ser-dead dead [ serialize-genome "genome" ser-dead set-at ] [ serialize-pane "membrane" ser-dead set-at ] bi
+  ser-dead ;
+
 : serialize ( cell -- str )
   {
     { [ dup wall? ] [ grid>> [ [ serialize ] map ] map ] }
-    { [ dup dead? ] [ dup gadget-child dormant>> [ nip cell-genome editor-string ] [ cell-genome editor-string ] if* ] }
+    { [ dup dead? ] [ serialize-genome ] }
     { [ dup alive? ] [ ref>> [ pprint ] with-string-writer  ] }
     { [ dup prison? ] [ gadget-text  ] }
     [ "unhandled type on serialization" throw ]
