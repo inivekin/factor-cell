@@ -17,12 +17,29 @@ M: cellular decrease-cell-size ( cellular -- )
   [ relayout ]
   bi ;
 
+: listener-executing-interactor ( -- interactor )
+   [ listener-gadget? ] find-window [ listener-window* ] unless*
+  gadget-child input>> ; inline
+  ! thread>> ; inline
 
-: <genome> ( -- genome )
-  genome new-editor <flag> >>flag
-  dup one-word-elt <element-model> >>token-model
-  dup <word-model> >>word-model
-  dup model>> <history> >>history ;
+:: <genome> ( -- genome )
+  ! genome new-editor <flag> >>flag
+  ! dup one-word-elt <element-model> >>token-model
+  ! dup <word-model> >>word-model
+  ! dup model>> <history> >>history
+  ! <mailbox> >>mailbox
+  ! listener-executing-thread >>thread
+  genome new-editor :> g
+  listener-executing-interactor :> l
+  g l thread>> >>thread drop
+  g l mailbox>> >>mailbox drop
+  g l flag>> >>flag drop
+  g dup one-word-elt <element-model> >>token-model drop
+  ! g dup <word-model> >>word-model drop
+  g l word-model>> >>word-model drop
+  g dup model>> <history> >>history drop
+  g
+  ;
 
 : force-propagate-ctrl-l ( genome -- ) T{ key-down f { C+ } "l" } swap parent>> propagate-gesture ;
 : force-propagate-ctrl-j ( genome -- ) T{ key-down f { C+ } "j" } swap parent>> propagate-gesture ;

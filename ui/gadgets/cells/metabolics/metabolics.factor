@@ -1,7 +1,7 @@
 USING: accessors arrays assocs classes combinators
 combinators.short-circuit
 continuations eval io.streams.string kernel listener math
-math.matrices math.order namespaces prettyprint
+math.matrices math.order namespaces prettyprint prettyprint.config
 prettyprint.backend sequences stack-checker ui.commands
 ui.gadgets ui.gadgets.cells.cellular ui.gadgets.cells.dead
 ui.gadgets.cells.alive ui.gadgets.cells.genomes ui.gadgets.cells.membranes
@@ -13,8 +13,15 @@ IN: ui.gadgets.cells.metabolics
 ! something that can be evaluated from input to output
 MIXIN: metabolic
 
+M: dead absorb dup absorbing-cell [ cell-genome editor-string [ parse-string call( -- x ) ] with-interactive-vocabs ] with-variable ;
+M: wall absorb grid>> dup tuple-as-matrix? [ matrix>tuple ] [ [ absorb ] map-cells ] if ; recursive
+
 : identify-enzymes ( metabolic -- quot in out )
-  dup parent>> parent>> absorbing-cell [ editor-string [ parse-string ] with-interactive-vocabs ] with-variable dup infer [ in>> length ] [ out>> length ] bi ;
+  dup parent>> parent>> absorbing-cell [
+  ! [ evaluate-input ] [ interactor-yield ] bi
+  ! [ editor-string [ parse-string ] with-interactive-vocabs ] [ call-error-hook ] recover
+  editor-string [ parse-string ] with-interactive-vocabs
+  ] with-variable dup infer [ in>> length ] [ out>> length ] bi ;
 
 : lacking-cells-after? ( out cells pair -- n )
   second cut nip length 1 - swap - ;
@@ -68,13 +75,13 @@ MIXIN: metabolic
 : metabolize ( in-stack quot cell -- out-stack )
   [ [ absorb ] map ] 2dip
   [ gadget-child { 0 1 } >>filled-cell drop ]
-  [ cell-membrane [ with-datastack ] with-pane ] bi ;
+  [ cell-membrane [ with-datastack ] with-pane ] [ relayout ] tri ;
 
 : set-cell-dead ( cell obj -- )
   [ [ pprint ] without-limits ] with-string-writer swap cell-genome set-editor-string
   ;
 : set-cell-alive ( cell obj -- )
-  >>ref [ cell-membrane ] keep '[ _ ref>> pprint-short ] with-pane
+  >>ref [ gadget-child gadget-child ] keep '[ _ ref>> pprint-short ] with-pane
   ;
 
 : kill-cell ( cell -- )
@@ -85,7 +92,10 @@ MIXIN: metabolic
   ;
 ! change to metabolize in place? create new output cell an put in its place
 : revive-cell ( cell -- )
-  [ [ dup absorbing-cell [ cell-genome editor-string [ parse-string ] with-interactive-vocabs ] with-variable call( -- x ) ] [ pair>> ] bi <alive-cell> ] keep
+  [ [ dup absorbing-cell [ cell-genome
+  editor-string [ parse-string ] with-interactive-vocabs
+  ! editor-string try-parse
+  ] with-variable call( -- x ) ] [ pair>> ] bi <alive-cell> ] keep
   [ swap replace-cell ]
   [ drop dup ref>> set-cell-alive ] 2bi
   ;

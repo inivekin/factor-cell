@@ -1,7 +1,8 @@
-USING: accessors arrays calendar combinators io
-io.encodings.binary io.encodings.utf8 io.files io.streams.string
-json kernel models.arrow models.delay present prettyprint
-sequences strings ui ui.gadgets ui.gadgets.cells.alive
+USING: accessors arrays assocs calendar combinators formatting
+io io.directories io.encodings.binary io.encodings.utf8 io.files
+io.pathnames io.streams.string json json.prettyprint kernel models.arrow
+models.delay present prettyprint sequences serialize strings ui
+ui.gadgets ui.gadgets.cells ui.gadgets.cells.alive
 ui.gadgets.cells.cellular ui.gadgets.cells.dead
 ui.gadgets.cells.prisons ui.gadgets.cells.walls
 ui.gadgets.editors ui.gadgets.scrollers ;
@@ -9,7 +10,8 @@ IN: ui.gadgets.cells.colonies
 
 : serialize-pane ( dead -- bytes )
   cell-membrane
-      [ tuple>unfiltered-assoc dup [ f "parent" ] dip set-at 1 swap col [ clone ] map ] [ class-of ] bi slots>tuple object>bytes >base64 >string
+  clone dup unparent object>bytes
+      ! [ tuple>unfiltered-assoc dup [ f "parent" ] dip set-at 1 swap col [ clone ] map ] [ class-of ] bi slots>tuple object>bytes >base64 >string
   ;
 
 : serialize-genome ( dead -- string )
@@ -34,7 +36,7 @@ IN: ui.gadgets.cells.colonies
   copy-file
   ;
 : cell>file ( pathname cell -- )
-  serialize [ >json write ] curry utf8 swap with-file-writer ;
+  serialize [ pprint-json ] curry utf8 swap with-file-writer ;
 
 DEFER: json-matrix>cells 
 : (>cells) ( obj cell -- )
@@ -44,14 +46,30 @@ DEFER: json-matrix>cells
     [ "unhandled type on deserialization" throw ]
   } cond
   ;
+
+: startup-connect-cells ( wall -- )
+  dup grid>> swap '[ [ _ swap dup dead? [ 1array swap add-cell-wall-connections ] [ nip dup wall? [ startup-connect-cells ] [ drop ] if ] if ] each ] each
+  ; recursive
+
 : json-matrix>cells ( m -- wall )
-  dup matrix-dim [ <iota> ] bi@ [ 2array <dead-cell> ] cartesian-map { 0 0 } <cell-wall> [ grid>> [ [ (>cells) ] 2each ] 2each ] keep 
+  dup matrix-dim [ <iota> ] bi@ [ 2array <dead-cell> ] cartesian-map { 0 0 } <cell-wall>
+  [ grid>> [ [ (>cells) ] 2each ] 2each ] keep 
+  [ startup-connect-cells ] keep 
   ;
 
+: startup-metabolize ( wall -- )
+  {
+    { [ dup wall? ] [ grid>> [ [ startup-metabolize ] each ] each ] } 
+    { [ dup dead? ] [ dup cell-genome editor-string "gadget." tail? [ [ metabolize-downward ] [ toggle-editor ] bi ] [ drop ] if ] } 
+    [ drop ]
+  } cond ; recursive
+
 : file>cell ( pathname -- cell )
-  binary file-contents >string json> json-matrix>cells f >>pair ;
+  binary file-contents >string json> json-matrix>cells f >>pair
+  dup grid>> [ [ startup-metabolize ] each ] each
+  ;
 
 : open-colony ( pathname -- )
   dup [ <amoeba> cell>file ] unless-file-exists
-  [ file>cell ] keep [ present swap <scroller> swap open-window ] [ over [ model>> 10 seconds <delay> spin '[ _ [ backup-cell-file ] [ _ cell>file ] bi ] <arrow> ] [ model<< ] bi ] 2bi
+  [ file>cell ] keep [ present swap <scroller> white-interior swap open-window ] [ over [ model>> 10 seconds <delay> spin '[ _ [ backup-cell-file ] [ _ cell>file ] bi ] <arrow> ] [ model<< ] bi ] 2bi
   ;

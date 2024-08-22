@@ -1,4 +1,6 @@
-USING: arrays classes kernel math sequences ui.gadgets ;
+USING: accessors arrays assocs classes classes.tuple
+combinators.short-circuit kernel math math.matrices sequences
+ui.gadgets ;
 IN: ui.gadgets.cells.cellular
 
 ! something that can be in a cell

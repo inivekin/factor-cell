@@ -1,10 +1,15 @@
-USING: accessors arrays combinators combinators.short-circuit
-kernel math math.order sequences ui.commands ui.gadgets
-ui.gadgets.borders ui.gadgets.cells.cellular
-ui.gadgets.cells.dead ui.gadgets.cells.genomes
+USING: accessors arrays assocs classes classes.tuple combinators
+combinators.short-circuit continuations documents.elements
+kernel listener math math.matrices math.order math.parser
+namespaces sequences ui ui.commands ui.gadgets
+ui.gadgets.borders ui.gadgets.cells.alive
+ui.gadgets.cells.cellular ui.gadgets.cells.dead
+ui.gadgets.cells.genomes ui.gadgets.cells.interlinks
 ui.gadgets.cells.membranes ui.gadgets.cells.metabolics
-ui.gadgets.cells.prisons ui.gadgets.cells.walls ui.gadgets.grids
-ui.gestures ui.pens.solid ui.theme ;
+ui.gadgets.cells.prisons ui.gadgets.cells.walls ui.gadgets.glass
+ui.gadgets.grids ui.gadgets.scrollers ui.gestures ui.pens.solid
+ui.theme ui.tools.button-list ui.tools.debugger
+ui.tools.listener ui.tools.listener.popups ;
 IN: ui.gadgets.cells
 
 MIXIN: cell
@@ -15,6 +20,10 @@ INSTANCE: dead cell
 INSTANCE: alive cell
 INSTANCE: prison cell
 INSTANCE: wall cell
+
+! M: dead request-focus-on [ nip [ pair>> <reversed> ] [ find-wall ] bi [ filled-cell<< ] [ drop ] if* ]
+!                          [ parent>> request-focus-on ]
+!                          2bi ;
 
 : new-default-row ( row col -- cell )
   2array <dead-cell> ;
@@ -147,7 +156,21 @@ M: cell imprison-cell [
 : <cells> ( n -- gadget )
   <iota> dup [ 2array <dead-cell> ] cartesian-map { 0 0 } <cell-wall> ;
 
+: show-splinter-popup ( interactor element popup -- )
+    [ [ drop ] [ relevant-rect ] 2bi ] dip swap show-popup ;
+
+:: <genome-debugger> ( error continuation interactor -- popup )
+    error
+    continuation
+    error compute-restarts
+    error interactor make-restart-hook-quot
+    <debugger> frame-debugger ;
+
+: genome-debugger-popup ( interactor error continuation -- )
+  pick <genome-debugger> one-line-elt swap show-splinter-popup ;
+
 : <amoeba> ( -- gadget )
+  [ [ absorbing-cell get cell-genome ] 2dip genome-debugger-popup ] error-hook set 
   1 <cells> f >>pair ;
 
 : open-cell-in-window ( cell -- )

@@ -1,4 +1,6 @@
-USING: ascii io.streams.peek namespaces ui.gadgets.cells.cellular ;
+USING: accessors arrays ascii io io.streams.peek
+io.streams.string kernel lexer math math.vectors namespaces
+sequences ui.gadgets.cells.cellular ui.gadgets.cells.walls ;
 IN: ui.gadgets.cells.interlinks
 
 : letter>coord ( ch -- n )

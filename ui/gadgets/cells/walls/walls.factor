@@ -1,5 +1,7 @@
-USING: accessors arrays assocs kernel math math.matrices
-sequences sequences.zipped ui.gadgets ui.gadgets.frames ui.gadgets.grids ui.gadgets.cells.cellular
+USING: accessors arrays assocs calendar combinators.extras
+kernel math math.matrices models models.delay models.product
+sequences sequences.zipped ui.gadgets ui.gadgets.cells.cellular
+ui.gadgets.cells.dead ui.gadgets.frames ui.gadgets.grids
 ui.pens.solid ui.theme vectors ;
 IN: ui.gadgets.cells.walls
 
@@ -9,7 +11,6 @@ TUPLE: wall < frame pair ;
 
 : each-cell ( cells quot: ( cell -- ) -- ) '[ _ each ] each ; inline
 : map-cells ( cells quot: ( cell -- cell ) -- cells' ) '[ _ map ] map ; inline
-M: wall absorb grid>> dup tuple-as-matrix? [ matrix>tuple ] [ [ absorb ] map-cells ] if ; recursive
 
 MIXIN: multicellular
 INSTANCE: wall multicellular
