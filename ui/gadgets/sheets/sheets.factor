@@ -62,22 +62,3 @@ SYMBOL: focussed-coord
   [ nip swap >>grid swap ]
   [ [ second dup ] [ dimension second over + ] [ grid>> flip <slice> ] tri* [ + 2array grid-add ] with matrix-each-index drop ] 2tri
   ;
-:: insert-cells-shift-rows ( cells padding pair sheet -- )
-  padding
-  [
-    sheet grid>> padding 2array stitch sheet grid<<
-    padding dimension second :> padded-len
-    sheet padded-len <iota>
-    sheet grid>> dimension second padded-len - :> offset
-    '[ offset + ] map
-    sheet grid>> cols [ offset + swap 2array grid-add ] matrix-each-index drop
-  ] when ! TODO the optional padding should be a separate insert call just like the following
-
-  cells sheet grid>> pair above/below surround
-  [ sheet grid<< ] keep
-  cells length 1 - pair first + :> row-offset
-  sheet row-offset sheet grid>> nth [ row-offset 2array grid-add ] each-index drop
-
-  drop
-  ; inline
-

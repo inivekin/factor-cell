@@ -9,3 +9,6 @@ TUPLE: cell model ;
 : <cell> ( obj -- cell )
     <model> cell boa ;
 
+: (mitosis) ( cell -- new-cell )
+    control-value clone <cell> ;
+

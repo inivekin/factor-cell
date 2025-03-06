@@ -7,20 +7,14 @@ TUPLE: organism
     redo
     ;
 
-! mitosis
-: cell-division ( cell organism -- new-cell )
-    [ control-value clone <cell> ] [ cells>> '[ _ push-model ] keep ] bi* ;
-
-: cell-divider ( organism -- divider: ( i j -- membrane ) )
-    '[ 2array <cell> [ _ cells>> push-model ] [ [ default-membrane-action ] <membrane-control> ] bi ] ; inline
-
-: <organism> ( cells -- organism )
-    organism new swap <model> >>cells
-    V{ } clone [ >>undo ] [ >>redo ] bi ;
+: <organism> ( -- organism )
+    organism new
+    V{ } clone >>undo
+    V{ } clone >>redo ;
 
 : <cellular-organism> ( rows cols -- gadget )
     [ 2array <cell> ] <cells>
-    [ V{ } concat-as <organism> ] [ <wall> <scroller> white-interior ] bi
+    <organism> <wall> <scroller> white-interior
     ;
 
 : <amoeba> ( -- gadget )

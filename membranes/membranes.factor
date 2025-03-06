@@ -1,4 +1,4 @@
-USING: ui.gadgets.sheets ;
+USING: cells ui.gadgets.sheets ;
 FROM: namespaces => set ;
 IN: membranes
 
@@ -10,6 +10,12 @@ TUPLE: membrane-control < pane-control cell ;
 : <membrane-control> ( cell quot -- membrane )
   f membrane-control new-pane
   swap >>quot over >>cell swap model>> >>model { 1 1 } >>gap ; 
+
+: mitosis ( membrane -- membranes )
+  cell>> (mitosis) [ default-membrane-action ] <membrane-control> 1array 1array ;
+: carcinogen ( -- divider: ( i j -- membrane ) )
+    [ 2array <cell> [ default-membrane-action ] <membrane-control> ] ; inline
+
 
 : dye-cell ( cell -- )
   selection-color <solid> >>boundary relayout-1 ;
