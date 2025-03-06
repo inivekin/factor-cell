@@ -1,0 +1,36 @@
+USING: ui.gadgets.sheets ;
+FROM: namespaces => set ;
+IN: membranes
+
+TUPLE: membrane-control < pane-control cell ;
+
+: default-membrane-action ( obj -- )
+  dup gadget? [ gadget. ] [ . ] if
+  ;
+: <membrane-control> ( cell quot -- membrane )
+  f membrane-control new-pane
+  swap >>quot over >>cell swap model>> >>model { 1 1 } >>gap ; 
+
+: dye-cell ( cell -- )
+  selection-color <solid> >>boundary relayout-1 ;
+: undye-cell ( cell -- )
+  content-background <solid> >>boundary relayout-1 ;
+
+: tint-cell ( cell -- )
+  line-color <solid> >>interior relayout-1 ;
+: untint-cell ( cell -- )
+  content-background <solid> >>interior relayout-1 ;
+
+: focus-cell ( membrane -- )
+  [ request-focus ]
+  [ cell-coordinate focussed-coord set ] bi ;
+
+: focus-membrane-above ( membrane -- )
+  1 n-cell-above focus-cell ;
+: focus-membrane-below ( membrane -- )
+  1 n-cell-below focus-cell ;
+: focus-membrane-before ( membrane -- )
+  1 n-cell-before focus-cell ;
+: focus-membrane-after ( membrane -- )
+  1 n-cell-after focus-cell ;
+
