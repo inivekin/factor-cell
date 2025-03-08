@@ -1,18 +1,22 @@
-USING: ui.gadgets ui.gadgets.sheets membranes organism ;
+USING: ui.gadgets ui.gadgets.sheets membranes ;
 IN: wall
 
 TUPLE: wall < frame organism ;
 
-! M: wall request-focus-on [ get-coordinates ] [ parent>> request-focus-on ] 2bi ;
-
 : pad-cols-after-amount ( cells sheet-grid -- n )
   [ dimension second ] bi@ - ;
 
+: probe ( skin pairs -- cell )
+  [ swap grid>> matrix-nth ] each ;
+: skin? ( cellular -- organism/? )
+  { [ wall? ] [ organism>> ] } && ;
 : wall~>organism ( cell -- organism )
-  [ { [ wall? ] [ organism>> ] } && ] find-parent organism>> ;
+  [ skin? ] find-parent organism>> ;
 : <cancer> ( m n -- cancer )
   carcinogen <matrix-by-indices> ;
 
+: cell-coordinates ( cellular -- pairs )
+  [ dup skin? not ] [ [ parent>> ] [ cell-coordinate ] bi ] produce nip <reversed> ;
   
 : pad-cols-before-amount ( pair cells -- m n )
   [ second ] [ dimension first ] bi* swap ;
@@ -20,8 +24,6 @@ TUPLE: wall < frame organism ;
 : pad-cols-before ( cells pair -- padded )
   over pad-cols-before-amount [ drop ]
   [ <cancer> swap 2array stitch ] if-zero ;
-
-: pad-new-rows-cols? ( n -- ? ) neg? ;
 
 :: pad-cols-after ( cells pair sheet -- padded )
 ! if need to pad after new row?
@@ -42,18 +44,20 @@ TUPLE: wall < frame organism ;
 : n-col-insert ( cells pair sheet -- )
   [ flip ] [ <reversed> ] [ dup grid>> flip >>grid ] tri* [ n-row-insert ] keep dup grid>> flip >>grid drop ;
 
+:: submatrix ( matrix pair-from pair-to  -- submatrix )
+  matrix pair-to pair-from v- [ <iota> ] map first2 [ pair-from first v+n swap rows ] [ pair-from second v+n swap cols ] bi* ;
 
-: insert-cell-below ( membrane -- )
-    [ mitosis ] [ cell-coordinate ] [ parent>> ] tri
-    n-row-insert ;
-: insert-cell-after ( membrane -- )
-    [ mitosis ] [ cell-coordinate ] [ parent>> ] tri
-    n-col-insert ;
+: insert-after ( cell pair-from pair-to  -- )
+  [ [ parent>> grid>> ] 2dip submatrix mitosis ] [ drop swap parent>> ] 3bi n-col-insert ;
+: remove-after ( cell n -- removed )
+  over [ cell-coordinate ] [ ] [ parent>> ] tri* remove-cols ;
+: insert-below ( cell pair-from pair-to -- )
+  [ [ parent>> grid>> ] 2dip submatrix mitosis ] [ drop swap parent>> ] 3bi n-row-insert ;
+: remove-below ( cell n -- removed )
+  over [ cell-coordinate ] [ ] [ parent>> ] tri* remove-rows ;
 
 : <wall> ( cells organism -- wall )
     swap dup dimension first2 wall new-frame swap
-    [
-        2array [ [ default-membrane-action ] <membrane-control> ] dip grid-add
-    ] matrix-each-index
+    [ 2array [ [ default-membrane-action ] <membrane-control> ] dip grid-add ] matrix-each-index
     swap >>organism ;
 

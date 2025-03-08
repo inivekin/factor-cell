@@ -11,10 +11,10 @@ TUPLE: membrane-control < pane-control cell ;
   f membrane-control new-pane
   swap >>quot over >>cell swap model>> >>model { 1 1 } >>gap ; 
 
-: mitosis ( membrane -- membranes )
-  cell>> (mitosis) [ default-membrane-action ] <membrane-control> 1array 1array ;
+: mitosis ( membranes -- membranes )
+  [ cell>> (mitosis) [ default-membrane-action ] <membrane-control> ] matrix-map ;
 : carcinogen ( -- divider: ( i j -- membrane ) )
-    [ 2array <cell> [ default-membrane-action ] <membrane-control> ] ; inline
+  [ 2array <cell> [ default-membrane-action ] <membrane-control> ] ; inline
 
 
 : dye-cell ( cell -- )

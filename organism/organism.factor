@@ -5,12 +5,14 @@ TUPLE: organism
     cells
     undo
     redo
+    waste
     ;
 
 : <organism> ( -- organism )
     organism new
     V{ } clone >>undo
-    V{ } clone >>redo ;
+    V{ } clone >>redo
+    V{ } clone >>waste ;
 
 : <cellular-organism> ( rows cols -- gadget )
     [ 2array <cell> ] <cells>
@@ -20,19 +22,4 @@ TUPLE: organism
 : <amoeba> ( -- gadget )
     1 1 <cellular-organism>
     ;
-
-{ membrane-control wall } [ "highlighting" f {
-  { gain-focus dye-cell }
-  { lose-focus undye-cell }
-  { mouse-enter tint-cell }
-  { mouse-leave untint-cell }
-  { T{ button-up } focus-cell }
-  { T{ key-down f f "k" } focus-membrane-above }
-  { T{ key-down f f "h" } focus-membrane-before }
-  { T{ key-down f f "j" } focus-membrane-below }
-  { T{ key-down f f "l" } focus-membrane-after }
-
-  { T{ key-down f f "o" } insert-cell-below }
-  { T{ key-down f f "a" } insert-cell-after }
-} define-command-map ] each
 

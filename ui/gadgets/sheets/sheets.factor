@@ -10,15 +10,6 @@ MIXIN: sheet
 INSTANCE: frame sheet
 INSTANCE: grid sheet
 
-GENERIC: insert-cell-rows ( cell cells sheet -- )
-GENERIC: insert-cell-cols ( cell cells sheet -- )
-! GENERIC: insert-cells-shift-rows ( cell filler: ( i j -- cell ) cells sheet -- )
-GENERIC: insert-cells-shift-cols ( cell cells sheet -- )
-GENERIC: remove-cell-rows ( cell cells sheet -- )
-GENERIC: remove-cell-cols ( cell cells sheet -- )
-
-GENERIC: cells-before ( n cell -- cell )
-
 SYMBOL: focussed-coord
 ! pair is always { row col }, note grid/frame does { col row }
 : cell-coordinate ( membrane-control -- pair/f )
@@ -62,3 +53,21 @@ SYMBOL: focussed-coord
   [ nip swap >>grid swap ]
   [ [ second dup ] [ dimension second over + ] [ grid>> flip <slice> ] tri* [ + 2array grid-add ] with matrix-each-index drop ] 2tri
   ;
+
+: unparent-rows ( rows -- )
+  [ 2drop unparent ] matrix-each-index ;
+: snip-rows* ( from to rows -- snipped 'rows )
+  rot cut rot cut swapd 2array concat ;
+: (remove-rows) ( pair n rows -- 'rows removed )
+  [ first ]
+  [ ] 
+  [ [ [ over + ] dip <slice> unparent-rows ] [ snip-rows* ] 3bi ] tri* ;
+
+: reset-focus ( pair direction sheet -- )
+  [ [v-] ] [ grid>> matrix-nth request-focus ] bi* ;
+: remove-rows ( pair n sheet -- removed )
+  [ [ grid>> (remove-rows) ] keep grid<< ]
+  [ nip [ horizontal ] dip reset-focus ] 3bi ;
+: remove-cols ( pair n sheet -- removed )
+  [ [ <reversed> ] 2dip [ grid>> flip (remove-rows) [ flip ] bi@ ] keep grid<< ]
+  [ nip [ vertical ] dip reset-focus ] 3bi ;
