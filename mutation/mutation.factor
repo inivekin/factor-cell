@@ -1,22 +1,26 @@
 USING: wall ;
 IN: mutation
 
-SINGLETONS: +growth+ absorb +excise+ explode collapse ;
+SINGLETONS: +growth+ +excise+ +splice+ absorb explode collapse ;
 TUPLE: mutation
     pairs
     direction
     range
     type
+    state
     ;
 INITIALIZED-SYMBOL: mutations [ 1 ]
 
 C: <mutation> mutation
 
-: <growth> ( pairs direction quot: ( cell -- cells ) -- mutation )
-  +growth+ <mutation> ;
+: <growth> ( pairs direction range -- mutation )
+  +growth+ f <mutation> ;
 
-: <excise> ( pairs direction n -- mutation )
-  +excise+ <mutation> ;
+: <excise> ( pairs direction range -- mutation )
+  +excise+ f <mutation> ;
+
+: <splice> ( pairs state -- mutation )
+  +splice+ swap [ f f ] 2dip <mutation> ;
 
 : (ungrow) ( mutation cells skin -- )
   swapd '[ pairs>> unclip [ _ swap probe ] [ ] bi* swap ] [ direction>> ] bi {
@@ -36,6 +40,11 @@ C: <mutation> mutation
     { horizontal [ first remove-after ] }
     [ throw ]
   } case ;
+
+: (splice) ( mutation cell -- replaced )
+  [ control-value ]
+  [ swapd [ state>> ] dip cell>> model>> set-model ]
+  bi ;
 
 : new-dna-branch? ( organism -- ? )
   [ undo>> ] [ redo>> ] bi [ dimension second ] bi@ = ;
@@ -65,6 +74,7 @@ C: <mutation> mutation
   over type>> {
     { +growth+ [ over pairs>> probe (grow) ] }
     { +excise+ [ [ over pairs>> probe (excise) ] keep organism>> waste>> push ] }
+    { +splice+ [ [ over pairs>> probe (splice) ] keep organism>> waste>> push ] }
     [ [ . ] with-string-writer "not implemented: " prepend throw ]
   } case ;
 : mutate ( mutation skin -- )
@@ -98,4 +108,8 @@ C: <mutation> mutation
   vertical excise ;
 : excise-after ( cell -- )
   horizontal excise ;
+
+: splice ( splicer -- )
+  [ splicing>> [ [ skin? ] find-parent ] [ cell-coordinates ] bi ]
+  [ editor-string [ [ read-quot ] with-interactive-vocabs ] with-string-reader <splice> ] bi swap mutate ;
   

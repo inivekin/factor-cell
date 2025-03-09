@@ -20,6 +20,8 @@ IN: cellular
 
   { T{ key-down f f "u" } unmutate-once }
   { T{ key-down f f "U" } remutate-once }
+
+  { T{ key-down f f "e" } show-splicer }
 } define-command-map ] each
 
 
