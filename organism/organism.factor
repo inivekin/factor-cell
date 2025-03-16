@@ -10,10 +10,10 @@ TUPLE: organism
     ;
 
 : show-splicer ( cell -- )
-  [ dup control-value [ ... ] with-string-writer ]
+  [ dup control-value [ [ . ] each ] with-string-writer ]
   [ [ [ skin? ] find-parent organism>> splicer>> ] keep >>splicing [ set-editor-string ] keep ]
   [ [ loc>> ] [ dim>> 2 v/n ] bi <rect> ] tri
-  show-glass ;
+  over [ show-glass ] dip request-focus ;
 
 : <organism> ( -- organism )
   organism new

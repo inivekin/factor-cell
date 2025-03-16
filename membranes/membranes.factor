@@ -5,11 +5,15 @@ IN: membranes
 TUPLE: membrane-control < pane-control cell ;
 
 : default-membrane-action ( quot -- )
-  [ dup gadget? [ gadget. ] [ . ] if ] compose { } clone swap with-datastack drop
+  ! [ dup gadget? [ gadget. ] [ . ] if ] compose 
+  { } clone swap with-datastack drop
   ;
+: display-quot-if-blank ( quot pane -- 'quot )
+  '[ _ [ _ drop . ] swap bi ] ; inline
+  ! '[ _ keep _ output>> gadget-child children>> length 0 = [ . ] [ drop ] if ] ; inline
 : <membrane-control> ( cell quot -- membrane )
   f membrane-control new-pane
-  swap >>quot over >>cell swap model>> >>model { 1 1 } >>gap ; 
+  swap over display-quot-if-blank >>quot over >>cell swap model>> >>model { 1 1 } >>gap ; 
 
 : mitosis ( membranes -- membranes )
   [ cell>> (mitosis) [ default-membrane-action ] <membrane-control> ] matrix-map ;

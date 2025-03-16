@@ -1,4 +1,4 @@
-USING: ui.tools.listener.history mutation ;
+USING: ui.tools.listener.history ;
 IN: splicer
 
 TUPLE: splicer < interactor splicing ;
@@ -20,6 +20,3 @@ TUPLE: splicer < interactor splicing ;
   dup model>> <history> >>history
   ;
 
-splicer "splicing" f {
-  { T{ key-down f f "RET" } splice }
-} define-command-map

@@ -1,91 +1,101 @@
 USING: wall ;
 IN: mutation
 
-SINGLETONS: +growth+ +excise+ +splice+ absorb explode collapse ;
-TUPLE: mutation
-    pairs
-    direction
-    range
-    type
-    state
-    ;
+! SINGLETONS: +growth+ +excise+ +splice+ absorb explode collapse ;
+MIXIN: mutagen
+
+GENERIC: (mutate) ( mutation skin -- )
+GENERIC: (unmutate) ( mutation skin -- )
+
+TUPLE: +growth+ pairs direction range ;
+TUPLE: +excise+ pairs direction range ;
+TUPLE: +splice+ pairs dna ;
+
+INSTANCE: +growth+ mutagen
+INSTANCE: +excise+ mutagen
+INSTANCE: +splice+ mutagen
+
 INITIALIZED-SYMBOL: mutations [ 1 ]
 
-C: <mutation> mutation
+C: <growth> +growth+
+C: <excise> +excise+
+C: <splice> +splice+
 
-: <growth> ( pairs direction range -- mutation )
-  +growth+ f <mutation> ;
-
-: <excise> ( pairs direction range -- mutation )
-  +excise+ f <mutation> ;
-
-: <splice> ( pairs state -- mutation )
-  +splice+ swap [ f f ] 2dip <mutation> ;
-
-: (ungrow) ( mutation cells skin -- )
-  swapd '[ pairs>> unclip [ _ swap probe ] [ ] bi* swap ] [ direction>> ] bi {
-    { vertical [ insert-after ] }
-    { horizontal [ insert-below ] }
+: (regrow) ( cells sheet mutation -- )
+  [ pairs>> last swap ] [ direction>> ] bi {
+    { vertical [ n-row-insert ]  }
+    { horizontal [ n-col-insert ] }
     [ throw ]
   } case ;
-: (grow) ( mutation cell -- )
-  swap [ pairs>> last ] [ range>> over v+ ] [ direction>> ] tri {
+: (grow) ( cell mutation -- )
+  [ pairs>> last ] [ range>> over v+ ] [ direction>> ] tri {
     { vertical [ insert-below ] }
     { horizontal [ insert-after ] }
     [ throw ]
   } case ;
-: (excise) ( mutation cell -- excised )
-  swap [ range>> ] [ direction>> ] bi {
-    { vertical [ second remove-below ] }
-    { horizontal [ first remove-after ] }
+: (excise) ( cell mutation -- excised )
+  [ range>> ] [ direction>> ] bi {
+    { vertical [ first remove-below ] }
+    { horizontal [ second remove-after ] }
     [ throw ]
   } case ;
 
-: (splice) ( mutation cell -- replaced )
+: (splice) ( cell mutation -- replaced )
+  swap
   [ control-value ]
-  [ swapd [ state>> ] dip cell>> model>> set-model ]
+  [ swapd [ dna>> ] dip cell>> model>> set-model ]
   bi ;
+: (resplice) ( quot cell mutation -- )
+  drop cell>> model>> set-model ;
 
+: ?. ( quot -- )
+  [ get-listener output>> ] dip with-pane ; inline
+: (?undo/redo.) ( skin -- )
+  '[ _ organism>> [ \ undo>> . undo>> ... ] [ \ redo>> . redo>> ... ] bi ] ?. ;
+: ?undo/redo. ( quot -- )
+  '[ dup (?undo/redo.) @ ] keep (?undo/redo.) ; inline
 : new-dna-branch? ( organism -- ? )
   [ undo>> ] [ redo>> ] bi [ dimension second ] bi@ = ;
 : store-dna ( mutation organism -- )
   organism>>
   [ [ new-dna-branch? ] [ undo>> empty? not ] bi and ]
-  [ undo>> [ last push ] [ swap 1vector swap push ] bi-curry if ] bi ;
+  [ [
+     ! organism shuffled to
+     ! undos mutation redos
+     [ undo>> swap ] [ redo>> ] bi dup length [ drop [ last ] dip push ] [ drop pop swap suffix! swap push ] if-zero ] [ undo>> swap 1vector swap push ] bi-curry if ] bi
+  ;
 
 : restore-dna ( organism -- mutation )
   organism>>
   [ undo>> pop ]
-  [ [ redo>> push ] curry [ last ] bi ] bi ;
+  [ [ redo>> push ] curry [ last ] bi ] bi
+  ;
 
 : unrestore-dna ( organism -- mutation )
   organism>>
   [ redo>> pop ]
-  [ [ undo>> push ] curry [ last ] bi ] bi ;
+  [ [ undo>> push ] curry [ last ] bi ] bi
+  ;
 
-: (unmutate) ( mutation skin -- )
-  over type>> {
-    { +growth+ [ over pairs>> probe (excise) drop ] }
-    { +excise+ [ [ organism>> waste>> pop ] [ (ungrow) ] bi ] }
-    [ [ . ] with-string-writer "not implemented: " prepend throw ]
-  } case ;
+: defecate ( skin waste -- ) swap organism>> waste>> push ;
+: biopsy ( skin mutation -- cell ) pairs>> probe ; 
+M: +growth+ (mutate) [ biopsy ] [ (grow) ] bi ;
+M: +growth+ (unmutate) [ biopsy ] [ (excise) ] bi drop ;
+M: +excise+ (mutate) dupd [ biopsy ] [ (excise) ] bi defecate ;
+                                                         ! TODO consider clamping pair probe to grid dims (currently probe to sheet level here as removed row/col may not exist anymore)
+M: +excise+ (unmutate) [ drop organism>> waste>> pop ] [ pairs>> but-last probe ] [ nip (regrow) ] 2tri ;
+M: +splice+ (mutate) dupd [ biopsy ] [ (splice) ] bi defecate ;
+M: +splice+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] [ nip (resplice) ] 2tri ;
 
-: (mutate) ( mutation skin -- )
-  over type>> {
-    { +growth+ [ over pairs>> probe (grow) ] }
-    { +excise+ [ [ over pairs>> probe (excise) ] keep organism>> waste>> push ] }
-    { +splice+ [ [ over pairs>> probe (splice) ] keep organism>> waste>> push ] }
-    [ [ . ] with-string-writer "not implemented: " prepend throw ]
-  } case ;
 : mutate ( mutation skin -- )
-  [ store-dna ]
-  [ (mutate) ] 2bi ;
+  [ [ store-dna ] ?undo/redo. ]
+  [ swap (mutate) ] 2bi ;
 : unmutate ( skin -- )
-  [ restore-dna ]
-  [ (unmutate) ] bi ;
+  [ [ restore-dna ] ?undo/redo. ]
+  [ swap (unmutate) ] bi ;
 : remutate ( skin -- )
-  [ unrestore-dna ]
-  [ (mutate) ] bi ;
+  [ [ unrestore-dna ] ?undo/redo. ]
+  [ swap (mutate) ] bi ;
 
 : unmutate-once ( cell -- )
   [ skin? ] find-parent unmutate ;
@@ -101,7 +111,11 @@ C: <mutation> mutation
   horizontal grow ;
 : excise ( cell direction -- )
   over parent>> grid>> dimension over
-  { { vertical [ first mutations get ] } { horizontal [ second mutations get swap ] } [ throw ] } case 2array
+  {
+    { vertical [ second mutations get swap ] }
+    { horizontal [ first mutations get ] }
+    [ throw ]
+  } case 2array
   '[ cell-coordinates _ _ <excise> ]
   [ [ skin? ] find-parent mutate ] bi ;
 : excise-below ( cell -- )
@@ -113,3 +127,7 @@ C: <mutation> mutation
   [ splicing>> [ [ skin? ] find-parent ] [ cell-coordinates ] bi ]
   [ editor-string [ [ read-quot ] with-interactive-vocabs ] with-string-reader <splice> ] bi swap mutate ;
   
+splicer "splicing" f {
+  { T{ key-down f f "RET" } splice }
+} define-command-map
+
