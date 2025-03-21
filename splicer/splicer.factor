@@ -1,7 +1,7 @@
 USING: ui.tools.listener.history ;
 IN: splicer
 
-TUPLE: splicer < interactor splicing ;
+TUPLE: splicer < interactor splicing ?manifest? ;
 
 : listener-executing-interactor ( -- interactor )
   [ listener-gadget? ] find-window [ listener-window* ] unless*
@@ -18,5 +18,6 @@ TUPLE: splicer < interactor splicing ;
   } cleave
   dup one-word-elt <element-model> >>token-model
   dup model>> <history> >>history
+  [ manifest get ] with-interactive-vocabs >>?manifest?
   ;
 

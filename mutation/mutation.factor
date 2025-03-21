@@ -1,4 +1,4 @@
-USING: wall ;
+USING: wall interlinks splicer ;
 IN: mutation
 
 ! SINGLETONS: +growth+ +excise+ +splice+ absorb explode collapse ;
@@ -41,10 +41,11 @@ C: <splice> +splice+
   } case ;
 
 : (splice) ( cell mutation -- replaced )
-  swap
-  [ control-value ]
-  [ swapd [ dna>> ] dip cell>> model>> set-model ]
-  bi ;
+  [ drop control-value ]
+  [ dna>> infer in>> length <iota> [ 1 + neg 0 2array ] map get-rel-cells [ cell>> control-value ] map { } concat-as concat ]
+  ! [ dna>> infer out>> length <iota> [ 1 + 0 2array ] map get-rel-cells [ cell>> ] map { } concat-as concat ]
+  [ swap [ dna>> 2array ] [ cell>> model>> set-model ] bi* ]
+  2tri ;
 : (resplice) ( quot cell mutation -- )
   drop cell>> model>> set-model ;
 
@@ -124,9 +125,13 @@ M: +splice+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] [ nip (resplic
   horizontal excise ;
 
 : splice ( splicer -- )
+  ! get surrounding cells based on splice direction and inference of quote
+  ! set splicing cell as symbol for relative cell getting?
   [ splicing>> [ [ skin? ] find-parent ] [ cell-coordinates ] bi ]
-  [ editor-string [ [ read-quot ] with-interactive-vocabs ] with-string-reader <splice> ] bi swap mutate ;
-  
+  [ editor-string ]
+  [ ?manifest?>> '[ [ read-quot ] _ (with-manifest) ] with-string-reader <splice> ]
+  tri swap mutate ;
+
 splicer "splicing" f {
   { T{ key-down f f "RET" } splice }
 } define-command-map

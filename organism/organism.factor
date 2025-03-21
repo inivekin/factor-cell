@@ -10,7 +10,7 @@ TUPLE: organism
     ;
 
 : show-splicer ( cell -- )
-  [ dup control-value [ [ . ] each ] with-string-writer ]
+  [ dup control-value second [ [ . ] each ] with-string-writer ]
   [ [ [ skin? ] find-parent organism>> splicer>> ] keep >>splicing [ set-editor-string ] keep ]
   [ [ loc>> ] [ dim>> 2 v/n ] bi <rect> ] tri
   over [ show-glass ] dip request-focus ;
@@ -24,7 +24,7 @@ TUPLE: organism
   ;
 
 : <cellular-organism> ( rows cols -- gadget )
-  [ 2array [ ] curry <cell> ] <cells>
+  [ 2array [ ] curry { } clone swap 2array <cell> ] <cells>
   <organism> <wall> <scroller> white-interior
   ;
 

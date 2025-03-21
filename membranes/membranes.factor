@@ -4,12 +4,12 @@ IN: membranes
 
 TUPLE: membrane-control < pane-control cell ;
 
-: default-membrane-action ( quot -- )
+: default-membrane-action ( datastack quot -- )
   ! [ dup gadget? [ gadget. ] [ . ] if ] compose 
-  { } clone swap with-datastack drop
+  with-datastack drop
   ;
 : display-quot-if-blank ( quot pane -- 'quot )
-  '[ _ [ _ drop . ] swap bi ] ; inline
+  '[ first2 _ [ _ drop . ] swap bi ] ; inline
   ! '[ _ keep _ output>> gadget-child children>> length 0 = [ . ] [ drop ] if ] ; inline
 : <membrane-control> ( cell quot -- membrane )
   f membrane-control new-pane
@@ -18,7 +18,7 @@ TUPLE: membrane-control < pane-control cell ;
 : mitosis ( membranes -- membranes )
   [ cell>> (mitosis) [ default-membrane-action ] <membrane-control> ] matrix-map ;
 : carcinogen ( -- divider: ( i j -- membrane ) )
-  [ 2array [ ] curry <cell> [ default-membrane-action ] <membrane-control> ] ; inline
+  [ 2array [ ] curry { } clone swap 2array <cell> [ default-membrane-action ] <membrane-control> ] ; inline
 
 
 : dye-cell ( cell -- )
