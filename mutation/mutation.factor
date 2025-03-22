@@ -1,4 +1,4 @@
-USING: wall interlinks splicer ;
+USING: wall interlinks proteins splicer ;
 IN: mutation
 
 ! SINGLETONS: +growth+ +excise+ +splice+ absorb explode collapse ;
@@ -41,11 +41,13 @@ C: <splice> +splice+
   } case ;
 
 : (splice) ( cell mutation -- replaced )
-  [ drop control-value ]
-  [ dna>> infer in>> length <iota> [ 1 + neg 0 2array ] map get-rel-cells [ cell>> control-value ] map { } concat-as concat ]
-  ! [ dna>> infer out>> length <iota> [ 1 + 0 2array ] map get-rel-cells [ cell>> ] map { } concat-as concat ]
-  [ swap [ dna>> 2array ] [ cell>> model>> set-model ] bi* ]
-  2tri ;
+  {
+    [ drop control-value ]
+    [ dna>> infer in>> length <iota> [ 1 + neg 0 2array ] map get-rel-cells [ cell>> control-value genes>> ] map { } concat-as ]
+    [ dna>> infer out>> length <iota> [ 1 + 0 2array ] map get-rel-cells [ cell>> ] map ]
+    [ swap [ dna>> swap <fold> ] [ cell>> model>> set-model ] bi* ]
+  }
+  2cleave ;
 : (resplice) ( quot cell mutation -- )
   drop cell>> model>> set-model ;
 
@@ -129,7 +131,7 @@ M: +splice+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] [ nip (resplic
   ! set splicing cell as symbol for relative cell getting?
   [ splicing>> [ [ skin? ] find-parent ] [ cell-coordinates ] bi ]
   [ editor-string ]
-  [ ?manifest?>> '[ [ read-quot ] _ (with-manifest) ] with-string-reader <splice> ]
+  [ ?manifest?>> '[ [ [ read-quot dup ] [ ] produce nip [ ] concat-as ] _ (with-manifest) ] with-string-reader <splice> ]
   tri swap mutate ;
 
 splicer "splicing" f {

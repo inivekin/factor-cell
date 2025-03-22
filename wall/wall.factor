@@ -58,6 +58,6 @@ TUPLE: wall < frame organism ;
 
 : <wall> ( cells organism -- wall )
     swap dup dimension first2 wall new-frame swap
-    [ 2array [ [ default-membrane-action ] <membrane-control> ] dip grid-add ] matrix-each-index
+    [ 2array [ <membrane-control> ] dip grid-add ] matrix-each-index
     swap >>organism ;
 
