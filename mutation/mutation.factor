@@ -8,7 +8,7 @@ GENERIC: (unmutate) ( skin mutation -- )
 
 TUPLE: +growth+ pairs direction range ;
 TUPLE: +excise+ pairs direction range ;
-TUPLE: +splice+ pairs direction dna ;
+TUPLE: +splice+ pairs direction dna relative-cells-in relative-cells-out ;
 TUPLE: +splint+ pairs range ;
 
 INSTANCE: +growth+ mutagen
@@ -45,8 +45,8 @@ C: <splint> +splint+
 : (splice) ( cell mutation -- replaced )
   {
     [ drop control-value ] ! FIXME should this be doing cell>> also???
-    [ dna>> infer in>> length <iota> [ 1 + neg 0 2array ] map get-rel-cells [ cell>> control-value genes>> ] map { } concat-as ]
-    [ dna>> infer out>> length <iota> [ 1 + 0 2array ] map get-rel-cells [ cell>> ] map ]
+    [ relative-cells-in>> get-rel-cells [ cell>> control-value genes>> ] map { } concat-as ]
+    [ relative-cells-out>> get-rel-cells [ cell>> ] map ]
     [ swap [ dna>> swap <fold> ] [ cell>> model>> set-model ] bi* ]
   }
   2cleave ;
@@ -63,7 +63,7 @@ C: <splint> +splint+
   {
     { [ dup non-empty-matrix? ] [ [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
     ! { [ dup tuple? ] [ [ <default-cell> ] tuple>cells ] }
-    { [ dup { [ sequence? ] [ empty? not ] } 1&& ] [ B 1array flip [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
+    { [ dup { [ sequence? ] [ empty? not ] } 1&& ] [ 1array flip [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
     [ throw ]
   } cond
   ;
@@ -127,9 +127,20 @@ M: +splint+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsplinte
 : remutate-once ( cell -- )
   find-skin remutate ;
 
+: (grow?) ( sheet pair splice -- dimension direction range )
+  dup direction>> '[ grid>> dimension { 1 1 } v- [ 1array ] [ _ swap ] bi ]
+  [ ]
+  [ relative-cells-out>> [ v+ ] with map ] tri*
+  flip [ maximum ] map
+  swap [v-]
+  ;
+: grow? ( mutation skin -- mutation/f )
+  [ swap pairs>> unclip-last [ probe ] dip ]
+  [ drop [ (grow?) ] [ [ pairs>> [ [ nip ] with change-last ] keep ] curry 2dip ] bi ]
+  [ drop [ dup [ 0 = ] all? [ 3drop f ] ] dip direction>> '[ _ v+ <growth> ] if ] 2tri ;
 : grow ( cell direction -- )
   '[ cell-coordinates _ mutations get 1 2array <growth> ]
-  [ [ skin? ] find-parent mutate ] bi ;
+  [ find-skin mutate ] bi ;
 : grow-below ( cell -- )
   vertical grow ;
 : grow-after ( cell -- )
@@ -148,19 +159,29 @@ M: +splint+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsplinte
 : excise-after ( cell -- )
   horizontal excise ;
 
+: infer-relative-pairs ( quot -- ins outs )
+  infer
+  [ in>> length <iota> [ 1 + neg 0 2array ] map ]
+  [ out>> length <iota> [ 1 + 0 2array ] map ] bi ;
+
+: parse-splice ( str splicer -- quot )
+  ?manifest?>> '[ [ [ read-quot dup ] [ ] produce nip [ ] concat-as ] _ (with-manifest) ] with-string-reader ;
 : splice-below ( splicer -- )
-  ! get surrounding cells based on splice direction and inference of quote
-  ! set splicing cell as symbol for relative cell getting?
-  [ splicing>> [ find-skin ] [ cell-coordinates ] bi ]
+  [ splicing>> [ find-skin ] [ cell-coordinates ] bi vertical ]
   [ editor-string ]
-  [ ?manifest?>> '[ [ [ read-quot dup ] [ ] produce nip [ ] concat-as ] _ (with-manifest) ] with-string-reader <splice> ]
-  tri swap mutate ;
+  [ parse-splice dup infer-relative-pairs <splice> ]
+  tri swap [ [ grow? ] keep [ mutate ] curry when* ] [ mutate ] 2bi ;
+: splice-after ( splicer -- )
+  [ splicing>> [ find-skin ] [ cell-coordinates ] bi horizontal ]
+  [ editor-string ]
+  [ parse-splice dup infer-relative-pairs [ [ <reversed> ] map ] bi@ <splice> ]
+  tri swap [ [ grow? ] keep [ mutate ] curry when* ] [ mutate ] 2bi ;
 
 : splinter ( cell -- )
   [ cell-coordinates mutations get <splint> ] [ find-skin ] bi mutate ;
 
 splicer "splicing" f {
   { T{ key-down f f "RET" } splice-below }
-  ! { T{ key-down f { C+ } "RET" } splice-after }
+  { T{ key-down f { C+ } "RET" } splice-after }
 } define-command-map
 

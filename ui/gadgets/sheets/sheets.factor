@@ -46,12 +46,12 @@ SYMBOL: focussed-coord
 : insert-rows ( pair cells sheet -- )
   [ grid>> pick above/below surround ]
   [ nip swap >>grid swap ]
-  [ [ first dup ] [ dimension first over + ] [ grid>> <slice> ] tri* [ '[ _ + ] dip 2array grid-add ] with matrix-each-index drop ] 2tri
+  [ [ first dup ] [ dimension first over + ] [ grid>> <slice> ] tri* [ [ + ] dip swap 2array grid-add ] with matrix-each-index drop ] 2tri
   ;
 : insert-cols ( pair cells sheet -- )
   [ grid>> flip pick before/after surround flip ]
   [ nip swap >>grid swap ]
-  [ [ second dup ] [ dimension second over + ] [ grid>> flip <slice> ] tri* [ + 2array grid-add ] with matrix-each-index drop ] 2tri
+  [ [ second dup ] [ dimension second over + ] [ grid>> flip <slice> ] tri* [ + swap 2array grid-add ] with matrix-each-index drop ] 2tri
   ;
 
 : unparent-rows ( rows -- )

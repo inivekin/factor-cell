@@ -11,8 +11,7 @@ TUPLE: membrane-control < pane-control cell ;
 : mitosis ( membranes -- membranes )
   [ cell>> (mitosis) <membrane-control> ] matrix-map ;
 : carcinogen ( -- divider: ( i j -- membrane ) )
-  [ 2array [ . ] curry <chain> <cell> <membrane-control> ] ; inline
-
+  [ 2array drop [ ] <chain> <cell> <membrane-control> ] ; inline
 
 : tint-cell ( cell -- )
   line-color <solid> >>interior relayout-1 ;

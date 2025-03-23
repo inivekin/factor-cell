@@ -50,11 +50,15 @@ TUPLE: wall < frame organism ;
   matrix pair-to pair-from v- [ <iota> ] map first2 [ pair-from first v+n swap rows ] [ pair-from second v+n swap cols ] bi* ;
 
 : insert-after ( cell pair-from pair-to  -- )
-  [ [ parent>> grid>> ] 2dip submatrix mitosis ] [ drop { 0 1 } v+ swap parent>> ] 3bi n-col-insert ;
+  ! [ [ parent>> grid>> ] 2dip submatrix mitosis ]
+  [ swap v- nip first2 <cancer> ]
+  [ drop { 0 1 } v+ swap parent>> ] 3bi n-col-insert ;
 : remove-after ( cell n -- removed )
   over [ cell-coordinate ] [ ] [ parent>> ] tri* remove-cols ;
 : insert-below ( cell pair-from pair-to -- )
-  [ [ parent>> grid>> ] 2dip submatrix mitosis ] [ drop { 1 0 } v+ swap parent>> ] 3bi n-row-insert ;
+  ! [ [ parent>> grid>> ] 2dip submatrix mitosis ]
+  [ swap v- nip first2 <cancer> ]
+  [ drop { 1 0 } v+ swap parent>> ] 3bi n-row-insert ;
 : remove-below ( cell n -- removed )
   over [ cell-coordinate ] [ ] [ parent>> ] tri* remove-rows ;
 
