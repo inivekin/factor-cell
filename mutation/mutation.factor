@@ -1,25 +1,27 @@
 USING: wall interlinks proteins splicer ;
 IN: mutation
 
-! SINGLETONS: +growth+ +excise+ +splice+ absorb explode collapse ;
 MIXIN: mutagen
 
-GENERIC: (mutate) ( mutation skin -- )
-GENERIC: (unmutate) ( mutation skin -- )
+GENERIC: (mutate) ( skin mutation -- )
+GENERIC: (unmutate) ( skin mutation -- )
 
 TUPLE: +growth+ pairs direction range ;
 TUPLE: +excise+ pairs direction range ;
-TUPLE: +splice+ pairs dna ;
+TUPLE: +splice+ pairs direction dna ;
+TUPLE: +splint+ pairs range ;
 
 INSTANCE: +growth+ mutagen
 INSTANCE: +excise+ mutagen
 INSTANCE: +splice+ mutagen
+INSTANCE: +splint+ mutagen
 
 INITIALIZED-SYMBOL: mutations [ 1 ]
 
 C: <growth> +growth+
 C: <excise> +excise+
 C: <splice> +splice+
+C: <splint> +splint+
 
 : (regrow) ( cells sheet mutation -- )
   [ pairs>> last swap ] [ direction>> ] bi {
@@ -42,7 +44,7 @@ C: <splice> +splice+
 
 : (splice) ( cell mutation -- replaced )
   {
-    [ drop control-value ]
+    [ drop control-value ] ! FIXME should this be doing cell>> also???
     [ dna>> infer in>> length <iota> [ 1 + neg 0 2array ] map get-rel-cells [ cell>> control-value genes>> ] map { } concat-as ]
     [ dna>> infer out>> length <iota> [ 1 + 0 2array ] map get-rel-cells [ cell>> ] map ]
     [ swap [ dna>> swap <fold> ] [ cell>> model>> set-model ] bi* ]
@@ -51,10 +53,28 @@ C: <splice> +splice+
 : (resplice) ( quot cell mutation -- )
   drop cell>> model>> set-model ;
 
+: non-empty-matrix? ( x -- ? )
+  { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&&
+  ;
+: (splinter) ( cell -- replaced )
+  [ cell-coordinate ] [ parent>> ] [
+  cell>>
+  control-value genes>> { } like ] tri
+  {
+    { [ dup non-empty-matrix? ] [ [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
+    ! { [ dup tuple? ] [ [ <default-cell> ] tuple>cells ] }
+    { [ dup { [ sequence? ] [ empty? not ] } 1&& ] [ B 1array flip [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
+    [ throw ]
+  } cond
+  ;
+: (unsplinter) ( replaced replacer -- )
+  [ cell-coordinate ] [ parent>> ] bi swapout drop
+  ;
+
 : ?. ( quot -- )
   [ get-listener output>> ] dip with-pane ; inline
 : (?undo/redo.) ( skin -- )
-  '[ _ organism>> [ \ undo>> . undo>> ... ] [ \ redo>> . redo>> ... ] bi ] ?. ;
+  '[ _ organism>> [ \ undo>> . undo>> . ] [ \ redo>> . redo>> . ] [ \ waste>> . waste>> . ] tri ] ?. ;
 : ?undo/redo. ( quot -- )
   '[ dup (?undo/redo.) @ ] keep (?undo/redo.) ; inline
 : new-dna-branch? ( organism -- ? )
@@ -89,6 +109,8 @@ M: +excise+ (mutate) dupd [ biopsy ] [ (excise) ] bi defecate ;
 M: +excise+ (unmutate) [ drop organism>> waste>> pop ] [ pairs>> but-last probe ] [ nip (regrow) ] 2tri ;
 M: +splice+ (mutate) dupd [ biopsy ] [ (splice) ] bi defecate ;
 M: +splice+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] [ nip (resplice) ] 2tri ;
+M: +splint+ (mutate) dupd biopsy (splinter) defecate ;
+M: +splint+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsplinter) ;
 
 : mutate ( mutation skin -- )
   [ [ store-dna ] ?undo/redo. ]
@@ -101,9 +123,9 @@ M: +splice+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] [ nip (resplic
   [ swap (mutate) ] bi ;
 
 : unmutate-once ( cell -- )
-  [ skin? ] find-parent unmutate ;
+  find-skin unmutate ;
 : remutate-once ( cell -- )
-  [ skin? ] find-parent remutate ;
+  find-skin remutate ;
 
 : grow ( cell direction -- )
   '[ cell-coordinates _ mutations get 1 2array <growth> ]
@@ -126,15 +148,19 @@ M: +splice+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] [ nip (resplic
 : excise-after ( cell -- )
   horizontal excise ;
 
-: splice ( splicer -- )
+: splice-below ( splicer -- )
   ! get surrounding cells based on splice direction and inference of quote
   ! set splicing cell as symbol for relative cell getting?
-  [ splicing>> [ [ skin? ] find-parent ] [ cell-coordinates ] bi ]
+  [ splicing>> [ find-skin ] [ cell-coordinates ] bi ]
   [ editor-string ]
   [ ?manifest?>> '[ [ [ read-quot dup ] [ ] produce nip [ ] concat-as ] _ (with-manifest) ] with-string-reader <splice> ]
   tri swap mutate ;
 
+: splinter ( cell -- )
+  [ cell-coordinates mutations get <splint> ] [ find-skin ] bi mutate ;
+
 splicer "splicing" f {
-  { T{ key-down f f "RET" } splice }
+  { T{ key-down f f "RET" } splice-below }
+  ! { T{ key-down f { C+ } "RET" } splice-after }
 } define-command-map
 

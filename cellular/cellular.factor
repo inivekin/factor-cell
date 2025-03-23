@@ -1,10 +1,14 @@
 USING: organism membranes mutation wall ;
 IN: cellular
 
+: dye ( cell -- )
+  dup wall? line-color selection-color ? <solid> >>boundary relayout-1 ;
+: undye ( cell -- )
+  content-background <solid> >>boundary relayout-1 ;
 
 { membrane-control wall } [ "highlighting" f {
-  { gain-focus dye-cell }
-  { lose-focus undye-cell }
+  { gain-focus dye }
+  { lose-focus undye }
   ! { mouse-enter tint-cell }
   ! { mouse-leave untint-cell }
   { T{ button-up } focus-cell }
@@ -22,6 +26,10 @@ IN: cellular
   { T{ key-down f f "U" } remutate-once }
 
   { T{ key-up f f "e" } show-splicer }
+
+  { T{ button-down { # 2 } } splinter }
+  { T{ key-down f f "TAB" } splinter }
+
 } define-command-map ] each
 
 

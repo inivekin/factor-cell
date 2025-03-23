@@ -6,18 +6,13 @@ TUPLE: membrane-control < pane-control cell ;
 
 : <membrane-control> ( cell -- membrane )
   f membrane-control new-pane
-  [ synthesize ] >>quot over >>cell swap model>> >>model { 1 1 } >>gap ; 
+  [ synthesize ] >>quot over >>cell swap model>> >>model { 2 2 } >>gap ; 
 
 : mitosis ( membranes -- membranes )
   [ cell>> (mitosis) <membrane-control> ] matrix-map ;
 : carcinogen ( -- divider: ( i j -- membrane ) )
   [ 2array [ . ] curry <chain> <cell> <membrane-control> ] ; inline
 
-
-: dye-cell ( cell -- )
-  selection-color <solid> >>boundary relayout-1 ;
-: undye-cell ( cell -- )
-  content-background <solid> >>boundary relayout-1 ;
 
 : tint-cell ( cell -- )
   line-color <solid> >>interior relayout-1 ;

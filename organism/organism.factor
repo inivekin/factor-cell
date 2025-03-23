@@ -25,7 +25,7 @@ TUPLE: organism
 
 : <cellular-organism> ( rows cols -- gadget )
   [ 2array [ . ] curry <chain> <cell> ] <cells>
-  <organism> <wall> <scroller> white-interior
+  <organism> <skin> <scroller> white-interior
   ;
 
 : <amoeba> ( -- gadget )

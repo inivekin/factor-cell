@@ -10,6 +10,8 @@ TUPLE: wall < frame organism ;
   [ swap grid>> matrix-nth ] each ;
 : skin? ( cellular -- organism/? )
   { [ wall? ] [ organism>> ] } && ;
+: find-skin ( cellular -- skin/f )
+  [ skin? ] find-parent ;
 : wall~>organism ( cell -- organism )
   [ skin? ] find-parent organism>> ;
 : <cancer> ( m n -- cancer )
@@ -56,8 +58,14 @@ TUPLE: wall < frame organism ;
 : remove-below ( cell n -- removed )
   over [ cell-coordinate ] [ ] [ parent>> ] tri* remove-rows ;
 
-: <wall> ( cells organism -- wall )
-    swap dup dimension first2 wall new-frame swap
-    [ 2array [ <membrane-control> ] dip grid-add ] matrix-each-index
-    swap >>organism ;
+: swapout ( replacer pair sheet -- replaced )
+  [ grid>> matrix-nth swap ]
+  [ -rot <reversed> grid-add drop ] 2bi ;
+
+: <wall> ( cells -- wall )
+  dup dimension first2 wall new-frame { 2 2 } >>gap swap
+  [ 2array [ <membrane-control> ] dip grid-add ] matrix-each-index ;
+: <skin> ( cells organism -- wall )
+  [ <wall> ]
+  [ >>organism ] bi* ;
 
