@@ -12,3 +12,11 @@ TUPLE: cell model ;
 : (mitosis) ( cell -- new-cell )
     control-value clone <cell> ;
 
+: tuple>unfiltered-assoc ( obj -- assoc )
+  [ class-of all-slots ] [ tuple-slots ] bi zip [ [ name>> ] dip ] assoc-map ;
+: tuple>matrix ( obj -- matrix )
+  [ class-of 1array ]
+  [ tuple>unfiltered-assoc 1array ]
+  bi 2array
+  ;
+

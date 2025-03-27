@@ -1,5 +1,7 @@
-USING: ascii io.streams.peek ;
+USING: ascii io.streams.peek namespaces ui.gadgets.sheets ;
 IN: interlinks
+
+SYMBOL: absorbing-cell
 
 : letter>coord ( ch -- n )
   CHAR: @ - ;
@@ -36,11 +38,8 @@ IN: interlinks
 : make-cell-coords ( pairs -- str )
   [ first2 [ number>string ] [ number>letter-coord ] bi* append ] map "" join ;
 
-
-: get-rel-cells ( cell pairs -- cells )
-  [ [ parent>> grid>> ] [ cell-coordinates last ] bi ]
-  [ [ v+ swap matrix-nth ] 2with map ] bi*
-  ;
+: set-absorbing-cell ( cell -- )
+  absorbing-cell set ;
 
 ! SYMBOL: absorbing-cell
 ! 
@@ -61,4 +60,4 @@ IN: interlinks
 ! SYNTAX: # scan-token get-cell-contents-from-coords suffix ;
 ! SYNTAX: ## scan-token get-cell-from-coords clone suffix ;
 ! SYNTAX: & scan-token get-relative-cell-contents-from-coords suffix ;
-! SYNTAX: #& scan-token get-relative-cell-from-coords clone suffix ;
+: #@ ( -- cell ) absorbing-cell get ;

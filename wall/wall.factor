@@ -8,18 +8,22 @@ TUPLE: wall < frame organism ;
 
 : probe ( skin pairs -- cell )
   [ swap grid>> matrix-nth ] each ;
+  
 : skin? ( cellular -- organism/? )
   { [ wall? ] [ organism>> ] } && ;
 : find-skin ( cellular -- skin/f )
   [ skin? ] find-parent ;
-: wall~>organism ( cell -- organism )
-  [ skin? ] find-parent organism>> ;
+: cell-coordinates ( cellular -- pairs )
+  [ dup skin? not ] [ [ parent>> ] [ cell-coordinate ] bi ] produce nip <reversed> ;
+
+: get-rel-cells ( cell pairs -- cells )
+  [ [ parent>> grid>> ] [ cell-coordinates last ] bi ]
+  [ [ v+ swap matrix-nth ] 2with map ] bi*
+  ;
+
 : <cancer> ( m n -- cancer )
   carcinogen <matrix-by-indices> ;
 
-: cell-coordinates ( cellular -- pairs )
-  [ dup skin? not ] [ [ parent>> ] [ cell-coordinate ] bi ] produce nip <reversed> ;
-  
 : pad-cols-before-amount ( pair cells -- m n )
   [ second ] [ dimension first ] bi* swap ;
 

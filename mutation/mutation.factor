@@ -1,4 +1,4 @@
-USING: wall interlinks proteins splicer ;
+USING: organism wall interlinks proteins splicer ;
 IN: mutation
 
 MIXIN: mutagen
@@ -44,9 +44,9 @@ C: <splint> +splint+
 
 : (splice) ( cell mutation -- replaced )
   {
-    [ drop control-value ] ! FIXME should this be doing cell>> also???
+    [ drop control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???
     [ relative-cells-in>> get-rel-cells [ cell>> control-value genes>> ] map { } concat-as ]
-    [ relative-cells-out>> get-rel-cells [ cell>> ] map ]
+    [ relative-cells-out>> get-rel-cells ] ! [ cell>> ] map ]
     [ swap [ dna>> swap <fold> ] [ cell>> model>> set-model ] bi* ]
   }
   2cleave ;
@@ -62,7 +62,7 @@ C: <splint> +splint+
   control-value genes>> { } like ] tri
   {
     { [ dup non-empty-matrix? ] [ [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
-    ! { [ dup tuple? ] [ [ <default-cell> ] tuple>cells ] }
+    { [ dup { [ length 1 = ] [ first tuple? ] } && ] [ first tuple>matrix flip [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
     { [ dup { [ sequence? ] [ empty? not ] } 1&& ] [ 1array flip [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
     [ throw ]
   } cond
@@ -167,21 +167,36 @@ M: +splint+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsplinte
 : parse-splice ( str splicer -- quot )
   ?manifest?>> '[ [ [ read-quot dup ] [ ] produce nip [ ] concat-as ] _ (with-manifest) ] with-string-reader ;
 : splice-below ( splicer -- )
+  [
   [ splicing>> [ find-skin ] [ cell-coordinates ] bi vertical ]
   [ editor-string ]
   [ parse-splice dup infer-relative-pairs <splice> ]
-  tri swap [ [ grow? ] keep [ mutate ] curry when* ] [ mutate ] 2bi ;
+  tri swap [ [ grow? ] keep [ mutate ] curry when* ] [ mutate ] 2bi
+  ] keep hide-glass ;
 : splice-after ( splicer -- )
+  [
   [ splicing>> [ find-skin ] [ cell-coordinates ] bi horizontal ]
   [ editor-string ]
   [ parse-splice dup infer-relative-pairs [ [ <reversed> ] map ] bi@ <splice> ]
-  tri swap [ [ grow? ] keep [ mutate ] curry when* ] [ mutate ] 2bi ;
+  tri swap [ [ grow? ] keep [ mutate ] curry when* ] [ mutate ] 2bi
+  ] keep hide-glass ;
 
+:: splice ( quot direction cell -- )
+  cell cell-coordinates 
+  direction
+  quot
+  quot infer-relative-pairs direction horizontal = [ [ [ <reversed> ] map ] bi@ ] when
+  <splice> cell find-skin [ [ grow? ] keep [ mutate ] curry when* ] [ mutate ] 2bi
+  ;
+
+: resume-selection ( splicer -- )
+  [ hide-glass ] [ splicing>> request-focus ] bi ;
 : splinter ( cell -- )
   [ cell-coordinates mutations get <splint> ] [ find-skin ] bi mutate ;
 
 splicer "splicing" f {
   { T{ key-down f f "RET" } splice-below }
   { T{ key-down f { C+ } "RET" } splice-after }
+  { T{ key-down f f "ESC" } resume-selection }
 } define-command-map
 

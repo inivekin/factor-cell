@@ -11,7 +11,11 @@ TUPLE: organism
 
 : show-splicer ( cell -- )
   [ dup control-value genes>> [ [ . ] each ] with-string-writer ]
-  [ [ [ skin? ] find-parent organism>> splicer>> ] keep >>splicing [ set-editor-string ] keep ]
+  [ [ [ skin? ] find-parent organism>> splicer>> ] keep
+    >>splicing [ set-editor-string ] keep
+    { 2 2 } <border> white-interior
+    popup-color <solid> >>boundary
+  ]
   [ [ loc>> ] [ dim>> 2 v/n ] bi <rect> ] tri
   over [ show-glass ] dip request-focus ;
 
@@ -20,11 +24,12 @@ TUPLE: organism
   V{ } clone >>undo
   V{ } clone >>redo
   V{ } clone >>waste
-  <splicer> popup-color <solid> >>boundary >>splicer
+  <splicer>
+  >>splicer
   ;
 
 : <cellular-organism> ( rows cols -- gadget )
-  [ 2array [ . ] curry <chain> <cell> ] <cells>
+  [ 2array drop { } [ "e to edit" print-element ] { } <fold> <cell> ] <cells>
   <organism> <skin> <scroller> white-interior
   ;
 
