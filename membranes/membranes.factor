@@ -5,7 +5,8 @@ IN: membranes
 : <membrane-control> ( cell -- membrane )
   f membrane-control new-pane
   ! you're gonna need to curry that pane, son.
-  dup [ absorbing-cell [ synthesize ] with-variable ] curry >>quot over >>cell swap model>> >>model { 2 2 } >>gap
+  dup [ absorbing-cell [ synthesize ] with-variable ] curry >>quot
+  over >>cell swap model>> >>model { 2 2 } >>gap
   ; 
 
 : mitosis ( membranes -- membranes )

@@ -65,11 +65,7 @@ SYMBOL: focussed-coord
   [ ] 
   [ [ [ over + ] dip <slice> unparent-rows ] [ snip-rows* ] 3bi ] tri* ;
 
-: reset-focus ( pair direction sheet -- )
-  [ [v-] ] [ grid>> matrix-nth request-focus ] bi* ;
 : remove-rows ( pair n sheet -- removed )
-  [ [ grid>> (remove-rows) ] keep grid<< ]
-  [ nip [ horizontal ] dip reset-focus ] 3bi ;
+  [ grid>> (remove-rows) ] keep grid<< ;
 : remove-cols ( pair n sheet -- removed )
-  [ [ <reversed> ] 2dip [ grid>> flip (remove-rows) [ flip ] bi@ ] keep grid<< ]
-  [ nip [ vertical ] dip reset-focus ] 3bi ;
+  [ <reversed> ] 2dip [ grid>> flip (remove-rows) [ flip ] bi@ ] keep grid<< ;

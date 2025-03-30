@@ -6,15 +6,20 @@ MIXIN: mutagen
 GENERIC: (mutate) ( skin mutation -- )
 GENERIC: (unmutate) ( skin mutation -- )
 
+! NOTE in/out-pairs is a range of relative cells e.g. { 3 1 } 3rows of 1 column after reference-pairs
 TUPLE: +growth+ reference-pairs direction in-pairs out-pairs dna ;
 TUPLE: +excise+ reference-pairs direction in-pairs out-pairs dna ;
 TUPLE: +splice+ reference-pairs direction in-pairs out-pairs dna ;
 TUPLE: +splint+ reference-pairs direction in-pairs out-pairs dna ;
+TUPLE: +siphon+ reference-pairs direction in-pairs out-pairs dna ;
+TUPLE: +swivel+ reference-pairs direction in-pairs out-pairs dna ;
 
 INSTANCE: +growth+ mutagen
 INSTANCE: +excise+ mutagen
 INSTANCE: +splice+ mutagen
 INSTANCE: +splint+ mutagen
+INSTANCE: +siphon+ mutagen
+INSTANCE: +swivel+ mutagen
 
 INITIALIZED-SYMBOL: mutations [ 1 ]
 
@@ -33,6 +38,10 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
   ;
 : <splint> ( ref direction -- splint ) 
   f f f +splint+ boa ;
+: <siphon> ( ref -- siphon )
+  f f f f +siphon+ boa ;
+: <swivel> ( ref -- swivel )
+  f f f f +swivel+ boa ;
 
 : expand-range ( out/in-pairs -- matrix )
   dup empty? [ first2 [ <iota> ] bi@ cartesian-product ] unless ;
@@ -55,39 +64,34 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
     [ throw ]
   } case ;
 
+: (splinter) ( cell -- replaced )
+  [ cell-coordinate ] [ parent>> ] [ organise ] tri metabolise -rot swapout ;
+: (unsplinter) ( replaced replacer -- )
+  [ cell-coordinate ] [ parent>> ] bi swapout drop ;
+: (siphon) ( wall -- replaced )
+  [ cell-coordinate ] [ parent>> ] [ organise [ ] curry <chain> <cell> <membrane-control> ] tri -rot swapout ;
+: (unsiphon) ( replaced replacer -- )
+  [ cell-coordinate ] [ parent>> ] bi swapout drop ;
+: (swivel) ( wall -- )
+  [ grid>> flip ] [ grid<< ] [ relayout ] tri ;
+
+: get-out-mutations ( cell mutation -- cells )
+  [ out-pairs>> expand-range concat ] [ direction>> <reversed> '[ _ v+ ] map ] bi get-rel-cells ;
 : (splice) ( cell mutation -- replaced )
   {
-    [ drop control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???
-    [ [ in-pairs>> expand-range concat ] [ direction>> <reversed> '[ _ v- ] map ] bi get-rel-cells [ cell>> control-value genes>> ] map { } concat-as ]
-    [ [ out-pairs>> expand-range concat ] [ direction>> <reversed> '[ _ v+ ] map ] bi get-rel-cells ] ! [ cell>> ] map ]
+    [ drop cell>> control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???
+    [ [ in-pairs>> expand-range concat ] [ direction>> <reversed> '[ _ v- ] map ] bi get-rel-cells [ organise ] map ]
+    [ get-out-mutations ] ! [ cell>> ] map ]
     [ swap [ dna>> swap <fold> ] [ cell>> model>> set-model ] bi* ]
   }
   2cleave ;
 : (resplice) ( quot cell mutation -- )
   drop cell>> model>> set-model ;
 
-: non-empty-matrix? ( x -- ? )
-  { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&&
-  ;
-: (splinter) ( cell -- replaced )
-  [ cell-coordinate ] [ parent>> ] [
-  cell>>
-  control-value genes>> { } like ] tri
-  {
-    { [ dup non-empty-matrix? ] [ [ { } like ] { } map-as [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
-    { [ dup { [ length 1 = ] [ first tuple? ] } && ] [ first tuple>matrix flip [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
-    { [ dup { [ sequence? ] [ empty? not ] } 1&& ] [ 1array flip [ [ ] curry <chain> <cell> ] matrix-map <wall> -rot swapout ] }
-    [ throw ]
-  } cond
-  ;
-: (unsplinter) ( replaced replacer -- )
-  [ cell-coordinate ] [ parent>> ] bi swapout drop
-  ;
-
 : ?. ( quot -- )
   [ get-listener output>> ] dip with-pane ; inline
 : (?undo/redo.) ( skin -- )
-  '[ _ organism>> [ \ undo>> . undo>> . ] [ \ redo>> . redo>> . ] [ \ waste>> . waste>> . ] tri ] ?. ;
+  '[ [ _ organism>> [ \ undo>> . undo>> . ] [ \ redo>> . redo>> . ] [ \ waste>> . waste>> . ] tri ] ?. ] with-short-limits ;
 : ?undo/redo. ( quot -- )
   '[ dup (?undo/redo.) @ ] keep (?undo/redo.) ; inline
 : new-dna-branch? ( organism -- ? )
@@ -124,12 +128,16 @@ M: +splice+ (mutate) dupd [ biopsy ] [ (splice) ] bi defecate ;
 M: +splice+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] [ nip (resplice) ] 2tri ;
 M: +splint+ (mutate) dupd biopsy (splinter) defecate ;
 M: +splint+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsplinter) ;
+M: +siphon+ (mutate) dupd biopsy (siphon) defecate ;
+M: +siphon+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsiphon) ;
+M: +swivel+ (mutate) biopsy (swivel) ;
+M: +swivel+ (unmutate) biopsy (swivel) ;
 
 : focus-mutation ( mutation skin -- )
   over biopsy
   swap {
     { [ dup out-pairs>> ] [ [ out-pairs>> ] [ direction>> ] bi v- ] }
-    { [ dup in-pairs>> ] [ [ in-pairs>> ] [ direction>> ] bi v+ ] }
+    { [ dup in-pairs>> ] [ [ in-pairs>> vneg ] [ direction>> ] bi v+ ] }
     [ drop { 0 0 } ]
   } cond
   n-cell-relative request-focus
@@ -165,6 +173,12 @@ M: +splint+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsplinte
   [ drop [ dup [ 0 = ] all? [ 3drop f ] ] dip
   direction>>
   '[ _ v+ <growth> ] if ] 2tri ;
+: (siphon?) ( cells -- mutations )
+  [ dup wall? [ cell-coordinates <siphon> ] [ drop f ] if ] map sift
+  ;
+: siphon? ( mutation skin -- mutations )
+  over biopsy swap get-out-mutations (siphon?)
+  ;
 : grow ( cell direction -- )
   '[ cell-coordinates _ mutations get 1 2array <growth> ]
   [ find-skin mutate ] bi ;
@@ -188,13 +202,18 @@ M: +splint+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsplinte
 
 : parse-splice ( str splicer -- quot )
   ?manifest?>> '[ [ [ read-quot dup ] [ ] produce nip [ ] concat-as ] _ (with-manifest) ] with-string-reader ;
+
 : splice-along ( splicer direction -- )
   '[
   [ splicing>> [ find-skin ] [ cell-coordinates ] bi ]
   [ editor-string ]
   [ parse-splice _ <splice> ]
-  tri swap [ [ grow? ] keep [ mutate ] curry when* ] [ mutate ] 2bi
-  ] keep hide-glass ;
+  tri swap
+  [ [ grow? ] keep [ mutate ] curry when* ]
+  [ [ siphon? ] keep [ mutate ] curry each ]
+  [ mutate ]
+  2tri
+  ] [ hide-glass ] swap bi ;
 
 : splice-below ( splicer -- )
   vertical splice-along ;
@@ -211,6 +230,11 @@ M: +splint+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsplinte
   [ hide-glass ] [ splicing>> request-focus ] bi ;
 : splinter ( cell -- )
   [ cell-coordinates mutations get <splint> ] [ find-skin ] bi mutate ;
+: siphon-up ( wall -- )
+  [ cell-coordinates <siphon> ] [ find-skin ] bi mutate ;
+
+: swivel ( wall -- )
+  [ cell-coordinates <swivel> ] [ find-skin ] bi mutate ;
 
 splicer "splicing" f {
   { T{ key-down f f "RET" } splice-below }
