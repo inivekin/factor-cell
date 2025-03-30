@@ -1,4 +1,4 @@
-USING: ui.gadgets.frames ui.gadgets.grids ;
+USING: math.order ui.gadgets.frames ui.gadgets.grids ;
 IN: ui.gadgets.sheets
 
 : matrix-each-index ( matrix quot: ( ... elt i j -- ... ) -- )
@@ -27,8 +27,16 @@ SYMBOL: focussed-coord
 : n-after ( pair n -- 'pair )
   '[ _ + ] over 1 spin change-nth ;
 
+
+
+: (row-limits) ( pair wall -- index max ) [ first ] [ grid>> length ] bi* ;
+: (col-limits) ( pair wall -- index max ) [ second ] [ grid>> first length ] bi* ;
+
+: clamp-pair-to-wall ( pair wall -- pair' )
+  [ (row-limits) 1 - 0 swap clamp ] [ (col-limits) 1 - 0 swap clamp ] 2bi 2array ;
+
 : n-cells-away ( cell n quot: ( pair n -- 'pair ) -- cell )
-  '[ cell-coordinate _ @ ] [ parent>> grid>> matrix-nth ] bi ; inline
+  '[ [ cell-coordinate _ @ ] [ parent>> clamp-pair-to-wall ] bi ] [ parent>> grid>> matrix-nth ] bi ; inline
 : n-cell-above ( cell n -- cell )
   [ n-above ] n-cells-away ;
 : n-cell-below ( cell n -- cell )

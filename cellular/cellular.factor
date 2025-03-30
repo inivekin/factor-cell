@@ -2,9 +2,8 @@ USING: mutation scopes wall namespaces ;
 IN: cellular
 
 : dye ( cell -- )
-  [ drop ] ! set-absorbing-cell ]
-  [ [ dim>> { 0 0 } swap <rect> ] [ scroll>rect ] bi ]
-  [ dup wall? dim-color selection-color ? <solid> >>boundary relayout-1 ] tri ;
+  [ scroll>gadget ]
+  [ dup wall? dim-color selection-color ? <solid> >>boundary relayout-1 ] bi ;
 : undye ( cell -- )
   dup wall? line-color content-background ? <solid> >>boundary relayout-1 ;
 
@@ -63,4 +62,6 @@ membrane-control "organising" f {
   { T{ key-down f f "TAB" } splinter }
 } define-command-map
 
-
+{ membrane-control wall } [ "common" f {
+    { T{ key-down f ${ os macos? M+ A+ ? } "t" } show-active-buttons-popup }
+} define-command-map ] each

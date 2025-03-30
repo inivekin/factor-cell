@@ -27,22 +27,31 @@ INSTANCE: wall organisable
 : metabolise ( obj -- wall )
   (metabolise) [ [ ] curry <chain> <cell> ] matrix-map <wall> ;
 : matrix>tuple ( matrix -- obj )
-  dup dimension second 2 = [ flip ] when first2 [ first organise first wrapped>> ] [ first organise concat dup dimension second 2 = [ flip ] unless ] bi* 1 swap col swap slots>tuple ;
+  dup dimension second 2 = [ flip ] when first2
+  [ first organise
+       first
+   wrapped>> ]
+  [ first organise
+     ! concat
+     dup dimension second 2 = [ flip ] unless ]
+  bi* 1 swap col swap slots>tuple ;
 : tuple-as-matrix? ( matrix -- ? )
   {
     [ dimension product 2 = ]
-    [ first first organise first dup wrapper? [ wrapped>> class? ] [ drop f ] if ]
+    [ first first organise
+         first
+         dup wrapper? [ wrapped>> class? ] [ drop f ] if ]
   } 1&&
   ;
 : auto-rank-down ( matrix -- sequence )
-  dup dimension first2 [ 1 = [ concat flip ] when ] dip 1 = [ concat ] when ;
+  dup dimension first2 [ 1 = [ flip concat ] when ] dip 1 = [ concat ] when ;
 DEFER: organise
 M: membrane-control organise cell>> control-value genes>> { } like ;
 M: wall organise 
   grid>> {
     { [ dup tuple-as-matrix? ] [ matrix>tuple ] } ! 1x2 with with class type as first elem forms a tuple
     ! rank 1 matrix concats to array to mirror metabolise making an array into a rank1 matrix thing
-    { [ dup matrix? ] [ [ organise ] matrix-map auto-rank-down ] }
+    { [ dup matrix? ] [ [ organise ] matrix-map auto-rank-down auto-rank-down ] }
     [ throw ]
   } cond
   ; recursive

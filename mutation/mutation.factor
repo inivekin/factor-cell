@@ -73,7 +73,7 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
 : (unsiphon) ( replaced replacer -- )
   [ cell-coordinate ] [ parent>> ] bi swapout drop ;
 : (swivel) ( wall -- )
-  [ grid>> flip ] [ grid<< ] [ relayout ] tri ;
+  [ grid>> flip ] [ grid<< ] bi ;
 
 : get-out-mutations ( cell mutation -- cells )
   [ out-pairs>> expand-range concat ] [ direction>> <reversed> '[ _ v+ ] map ] bi get-rel-cells ;
@@ -140,7 +140,7 @@ M: +swivel+ (unmutate) biopsy (swivel) ;
     { [ dup in-pairs>> ] [ [ in-pairs>> vneg ] [ direction>> ] bi v+ ] }
     [ drop { 0 0 } ]
   } cond
-  n-cell-relative request-focus
+  n-cell-relative [ request-focus ] [ scroll>gadget ] bi
   ;
    
 
@@ -203,16 +203,17 @@ M: +swivel+ (unmutate) biopsy (swivel) ;
 : parse-splice ( str splicer -- quot )
   ?manifest?>> '[ [ [ read-quot dup ] [ ] produce nip [ ] concat-as ] _ (with-manifest) ] with-string-reader ;
 
+: (splice-along) ( splice skin -- )
+  [ [ grow? ] keep [ mutate ] curry when* ]
+  [ [ siphon? ] keep [ mutate ] curry each ]
+  [ mutate ]
+  2tri ;
 : splice-along ( splicer direction -- )
   '[
   [ splicing>> [ find-skin ] [ cell-coordinates ] bi ]
   [ editor-string ]
   [ parse-splice _ <splice> ]
-  tri swap
-  [ [ grow? ] keep [ mutate ] curry when* ]
-  [ [ siphon? ] keep [ mutate ] curry each ]
-  [ mutate ]
-  2tri
+  tri swap (splice-along)
   ] [ hide-glass ] swap bi ;
 
 : splice-below ( splicer -- )
@@ -221,9 +222,9 @@ M: +swivel+ (unmutate) biopsy (swivel) ;
   horizontal splice-along ;
 :: splice ( quot direction cell -- )
   cell cell-coordinates 
-  direction
   quot
-  <splice> cell find-skin [ [ grow? ] keep [ mutate ] curry when* ] [ mutate ] 2bi
+  direction
+  <splice> cell find-skin (splice-along)
   ;
 
 : resume-selection ( splicer -- )

@@ -4,6 +4,8 @@ IN: scopes
 DEFER: filescope
 : (filescope) ( str pathname -- gadget )
   [ <label> ] [ absolute-path '[ [ membrane-control? ] find-parent absorbing-cell [ [ _ filescope ] horizontal #@ splice ] with-variable ] <roll-button> ] bi* ;
+  ! [ <label> ] [  [ <presentation> ] [ absolute-path '[ [ membrane-control? ] find-parent absorbing-cell [ [ _ filescope ] horizontal #@ splice ] with-variable ] >>hook ] bi ] bi* ;
+
 : filescope ( str -- presentations )
   [ current-directory get directory-files
         [ [ >pathname dup directory? ]
