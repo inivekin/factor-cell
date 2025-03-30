@@ -37,6 +37,8 @@ SYMBOL: focussed-coord
   [ n-before ] n-cells-away ;
 : n-cell-after ( cell n -- cell )
   [ n-after ] n-cells-away ;
+: n-cell-relative ( cell pair -- cell )
+  '[ v+ ] n-cells-away ; 
 
 : above/below ( matrix pair -- above below )
   first cut ;
