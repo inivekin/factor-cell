@@ -31,22 +31,25 @@ IN: cellular
   ! { mouse-enter tint-cell }
   ! { mouse-leave untint-cell }
   { T{ button-up } focus-cell }
-  { T{ key-down f f "k" } focus-membrane-above }
-  { T{ key-down f f "h" } focus-membrane-before }
-  { T{ key-down f f "j" } focus-membrane-below }
-  { T{ key-down f f "l" } focus-membrane-after }
-  { T{ key-down f f "ESC" } focus-out }
-  { T{ key-down f f "RET" } focus-in }
+  { T{ key-up f f "k" } focus-membrane-above }
+  { T{ key-up f f "h" } focus-membrane-before }
+  { T{ key-up f f "j" } focus-membrane-below }
+  { T{ key-up f f "l" } focus-membrane-after }
+  { T{ key-up f f "ESC" } focus-out }
+  { T{ key-up f f "RET" } focus-in }
+  { T{ key-up f f "/" } highlighter-search }
 } define-command-map ] each
 
 { membrane-control wall } [ "mutating" f {
-  { T{ key-down f f ";" } grow-below }
-  { T{ key-down f { C+ } ";" } grow-after }
-  { T{ key-down f f "," } excise-below }
-  { T{ key-down f { C+ } "," } excise-after }
+  { T{ key-up f f ";" } grow-below }
+  { T{ key-up f { C+ } ";" } grow-after }
+  { T{ key-up f f "," } excise-below }
+  { T{ key-up f { C+ } "," } excise-after }
 
-  { T{ key-down f f "u" } unmutate-once }
-  { T{ key-down f f "U" } remutate-once }
+  { T{ key-up f f "u" } unmutate-once }
+  { T{ key-up f f "U" } remutate-once }
+  { T{ key-up f f "f" } freeze }
+  { T{ key-up f f "F" } thaw }
 } define-command-map ] each
 
 membrane-control "splicing" f {
@@ -54,12 +57,12 @@ membrane-control "splicing" f {
 } define-command-map
 
 wall "organising" f {
-  { T{ key-down f f "TAB" } siphon-up }
-  { T{ key-down f { C+ } "TAB" } swivel }
+  { T{ key-up f f "TAB" } siphon-up }
+  { T{ key-up f { C+ } "TAB" } swivel }
 } define-command-map
 membrane-control "organising" f {
-  { T{ button-down { # 2 } } splinter }
-  { T{ key-down f f "TAB" } splinter }
+  { T{ button-up { # 2 } } splinter }
+  { T{ key-up f f "TAB" } splinter }
 } define-command-map
 
 { membrane-control wall } [ "common" f {

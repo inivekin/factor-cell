@@ -1,4 +1,5 @@
 USING: interlinks ;
+FROM: help.syntax.private => parse-help-text ;
 IN: proteins
 
 TUPLE: membrane-control < pane-control cell ;
@@ -13,13 +14,34 @@ MIXIN: protein
 INSTANCE: fold protein
 INSTANCE: chain protein
 
-GENERIC: synthesize ( protein -- )
+TUPLE: gattaca text style ;
+C: <gattaca> gattaca
+SYNTAX: ..: \ ; parse-help-text default-style get <gattaca> suffix ;
+: gattaca. ( gattaca -- )
+  [ text>> ] [ style>> ] bi [ print-element ] with-style ;
+: .. ( element -- )
+  {
+    { [ dup gattaca? ] [ gattaca. ] }
+    [ . ]
+  } cond ;
 
-M: chain synthesize genes>> [ [ dup gadget? [ gadget. ] [ . ] if  ] each ] with-short-limits ;
+TUPLE: wall < frame organism ;
+
+GENERIC: synthesize ( protein -- )
+: default-display ( seq -- )
+  [ [ {
+        { [ dup { [ membrane-control? ] [ wall? ] } 1|| ] [ "## " swap [ present append ] [ ] bi write-object nl ] }
+        { [ dup gadget? ] [ gadget. ] }
+        { [ dup gattaca? ] [ gattaca. ] }
+        [ . ]
+      } cond 
+  ] each ] with-short-limits 
+  ;
+M: chain synthesize genes>> default-display ;
 M: fold synthesize [ drains>> ] [ sources>> ] [ genes>> ] tri
                    [ with-datastack dup empty? [ 2drop ] ] keep
                    '[
-                      _ [ dup gadget? [ gadget. ] [ . ] if ] each
+                      _ default-display
                       [ [ ] curry <chain> swap cell>> model>> set-model ] 2each
                     ] if ;
 

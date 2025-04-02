@@ -1,10 +1,13 @@
-USING: organism wall interlinks proteins splicer ;
+USING: organism wall interlinks proteins splicer sequences.extras ;
+FROM: models => change-model ;
 IN: mutation
 
 MIXIN: mutagen
 
 GENERIC: (mutate) ( skin mutation -- )
 GENERIC: (unmutate) ( skin mutation -- )
+
+INITIALIZED-SYMBOL: freezer [ LH{ } clone <model> ]
 
 ! NOTE in/out-pairs is a range of relative cells e.g. { 3 1 } 3rows of 1 column after reference-pairs
 TUPLE: +growth+ reference-pairs direction in-pairs out-pairs dna ;
@@ -13,6 +16,8 @@ TUPLE: +splice+ reference-pairs direction in-pairs out-pairs dna ;
 TUPLE: +splint+ reference-pairs direction in-pairs out-pairs dna ;
 TUPLE: +siphon+ reference-pairs direction in-pairs out-pairs dna ;
 TUPLE: +swivel+ reference-pairs direction in-pairs out-pairs dna ;
+TUPLE: +stasis+ reference-pairs direction in-pairs out-pairs dna ;
+TUPLE: +thaw+ reference-pairs direction in-pairs out-pairs dna ;
 
 INSTANCE: +growth+ mutagen
 INSTANCE: +excise+ mutagen
@@ -20,6 +25,8 @@ INSTANCE: +splice+ mutagen
 INSTANCE: +splint+ mutagen
 INSTANCE: +siphon+ mutagen
 INSTANCE: +swivel+ mutagen
+INSTANCE: +stasis+ mutagen
+INSTANCE: +thaw+ mutagen
 
 INITIALIZED-SYMBOL: mutations [ 1 ]
 
@@ -42,6 +49,10 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
   f f f f +siphon+ boa ;
 : <swivel> ( ref -- swivel )
   f f f f +swivel+ boa ;
+: <stasis> ( ref -- stasis )
+  f f f f +stasis+ boa ;
+: <thaw> ( ref -- thaw )
+  f f f f +thaw+ boa ;
 
 : expand-range ( out/in-pairs -- matrix )
   dup empty? [ first2 [ <iota> ] bi@ cartesian-product ] unless ;
@@ -74,6 +85,24 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
   [ cell-coordinate ] [ parent>> ] bi swapout drop ;
 : (swivel) ( wall -- )
   [ grid>> flip ] [ grid<< ] bi ;
+
+: <cryogenics-table> ( cell -- table )
+  '[ freezer get [ [ _ swap ] dip set-at ] change-model* ] <action-field> "cell label" >>default-text
+  ;
+: <thaw-table> ( cell -- table )
+  [ freezer get [ keys [ ">" swap 2array ] map ] <arrow> trivial-renderer [ second ] <search-table> dup table>> ] dip
+  [ cell-coordinate ] [ parent>> ] bi
+  '[ second freezer get value>> at (mitosis) <membrane-control> _ _ swapout drop ] >>action
+  [ hide-glass ] >>hook t >>selection-required? t >>takes-focus? drop
+  ;
+: show-cryogenics-popup ( cell -- )
+  <cryogenics-table> [ world get world-focus swap over gadget>rect show-glass ] [ request-focus ] bi ;
+: show-thaw-popup ( cell -- )
+  <thaw-table> [ world get world-focus swap over gadget>rect show-glass ] [ field>> request-focus ] bi ;
+: (freeze) ( cell -- )
+  [ cell-coordinate ] [ parent>> ] bi 1 1 <cancer> { 0 0 } swap matrix-nth -rot swapout show-cryogenics-popup ;
+: (unfreeze) ( cell -- )
+  [ cell-coordinate ] [ parent>> ] bi freezer get control-value >alist pop -rot swapout drop ;
 
 : get-out-mutations ( cell mutation -- cells )
   [ out-pairs>> expand-range concat ] [ direction>> <reversed> '[ _ v+ ] map ] bi get-rel-cells ;
@@ -132,27 +161,34 @@ M: +siphon+ (mutate) dupd biopsy (siphon) defecate ;
 M: +siphon+ (unmutate) [ drop organism>> waste>> pop ] [ biopsy ] 2bi (unsiphon) ;
 M: +swivel+ (mutate) biopsy (swivel) ;
 M: +swivel+ (unmutate) biopsy (swivel) ;
+M: +stasis+ (mutate) biopsy (freeze) ;
+M: +stasis+ (unmutate) biopsy (unfreeze) ;
+M: +thaw+ (mutate) biopsy show-thaw-popup ;
+M: +thaw+ (unmutate) biopsy drop ;
 
 : focus-mutation ( mutation skin -- )
-  over biopsy
-  swap {
-    { [ dup out-pairs>> ] [ [ out-pairs>> ] [ direction>> ] bi v- ] }
-    { [ dup in-pairs>> ] [ [ in-pairs>> vneg ] [ direction>> ] bi v+ ] }
-    [ drop { 0 0 } ]
-  } cond
-  n-cell-relative [ request-focus ] [ scroll>gadget ] bi
+  over { [ +thaw+? ] [ +stasis+? ] } 1|| [ 2drop ]
+  [
+      over biopsy
+      swap {
+        { [ dup out-pairs>> ] [ [ out-pairs>> ] [ direction>> ] bi v- ] }
+        { [ dup in-pairs>> ] [ [ in-pairs>> vneg ] [ direction>> ] bi v+ ] }
+        [ drop { 0 0 } ]
+      } cond
+      n-cell-relative yield [ request-focus ] [ scroll>gadget ] bi
+  ] if
   ;
    
 
 : mutate ( mutation skin -- )
-  [ [ store-dna ] ?undo/redo. ]
+  [ store-dna ] ! [ store-dna ] ?undo/redo. ]
   [ swap (mutate) ]
   [ focus-mutation ] 2tri ;
 : unmutate ( skin -- )
-  [ [ restore-dna ] ?undo/redo. ]
+  [ restore-dna ] ! [ restore-dna ] ?undo/redo. ]
   [ swap (unmutate) ] bi ;
 : remutate ( skin -- )
-  [ [ unrestore-dna ] ?undo/redo. ]
+  [ unrestore-dna ] ! [ unrestore-dna ] ?undo/redo. ]
   [ swap (mutate) ] bi ;
 
 : unmutate-once ( cell -- )
@@ -212,7 +248,7 @@ M: +swivel+ (unmutate) biopsy (swivel) ;
   '[
   [ splicing>> [ find-skin ] [ cell-coordinates ] bi ]
   [ editor-string ]
-  [ parse-splice _ <splice> ]
+  [ dup splicing>> absorbing-cell [ parse-splice _ <splice> ] with-variable ]
   tri swap (splice-along)
   ] [ hide-glass ] swap bi ;
 
@@ -236,6 +272,22 @@ M: +swivel+ (unmutate) biopsy (swivel) ;
 
 : swivel ( wall -- )
   [ cell-coordinates <swivel> ] [ find-skin ] bi mutate ;
+
+: freeze ( cell -- )
+  [ cell-coordinates <stasis> ] [ find-skin ] bi mutate ;
+: thaw ( cell -- )
+  [ cell-coordinates <thaw> ] [ find-skin ] bi mutate ;
+
+FROM: ui.gadgets.glass.private => glass? ;
+: hide-glass-without-refocus ( glass -- )
+    [ glass? ] find-parent
+    [ dup find-world [ unparent ] dip drop ] when* ;
+:: highlighter-search ( cell -- )
+  cell dup membrane-control? [ parent>> ] when :> searching-cell
+  searching-cell grid>> [ [ cell-coordinates make-cell-coords ] [ gadget-text ] [ ] tri 3array ] matrix-map concat <model>
+  [ { 0 1 } swap cols flip ] <arrow> trivial-renderer [ second ] <search-table> dup table>>
+  [ first parse-cell-coords searching-cell find-skin swap probe request-focus ] >>action [ hide-glass-without-refocus ] >>hook t >>selection-required? drop
+  [ world get world-focus swap over gadget>rect show-glass ] [ request-focus ] bi ;
 
 splicer "splicing" f {
   { T{ key-down f f "RET" } splice-below }

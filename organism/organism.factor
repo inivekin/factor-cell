@@ -1,4 +1,4 @@
-USING: cells classes splicer wall ;
+USING: cells classes io splicer wall ;
 IN: organism
 
 TUPLE: organism
@@ -19,7 +19,7 @@ INSTANCE: wall organisable
 : (metabolise) ( obj -- matrix )
   {
     { [ dup non-empty-matrix? ] [ [ { } like ] { } map-as ] }
-    { [ dup { [ length 1 = ] [ first tuple? ] } && ] [ first tuple>matrix flip ] }
+    { [ dup { [ length 1 = ] [ first tuple? ] } 1&& ] [ first tuple>matrix flip ] }
     ! { [ dup { [ sequence? ] [ empty? not ] } 1&& ] [ 1array ] }
     [ throw ]
   } cond ;
@@ -32,7 +32,6 @@ INSTANCE: wall organisable
        first
    wrapped>> ]
   [ first organise
-     ! concat
      dup dimension second 2 = [ flip ] unless ]
   bi* 1 swap col swap slots>tuple ;
 : tuple-as-matrix? ( matrix -- ? )
@@ -56,14 +55,16 @@ M: wall organise
   } cond
   ; recursive
 
+: gadget>rect ( gadget -- rect )
+  [ loc>> ] [ dim>> 2 v/n ] bi <rect> ;
 : show-splicer ( cell -- )
-  [ dup control-value genes>> [ [ . ] each ] with-string-writer ]
+  [ dup control-value genes>> [ [ dup { [ wall? ] [ membrane-control? ] } 1|| [ "## " swap present append write " " write ] [ . ] if ] each ] with-string-writer ]
   [ [ [ skin? ] find-parent organism>> splicer>> ] keep
     >>splicing [ set-editor-string ] keep
     { 2 2 } <border> white-interior
     popup-color <solid> >>boundary
   ]
-  [ [ loc>> ] [ dim>> 2 v/n ] bi <rect> ] tri
+  [ gadget>rect ] tri
   over [ show-glass ] dip request-focus ;
 
 : <organism> ( -- organism )

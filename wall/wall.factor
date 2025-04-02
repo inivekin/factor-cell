@@ -1,7 +1,9 @@
 USING: ui.gadgets ui.gadgets.sheets membranes ;
+FROM: ui.gadgets.scrollers.private => update-scroller ;
 IN: wall
 
-TUPLE: wall < frame organism ;
+! don't update scroller if lower focused gadget already updated?
+! M: wall update-scroller 2drop ;
 
 : pad-cols-after-amount ( cells sheet-grid -- n )
   [ dimension second ] bi@ - ;
@@ -10,16 +12,11 @@ TUPLE: wall < frame organism ;
   [ swap grid>> matrix-nth ] each ;
   
 : skin? ( cellular -- organism/? )
-  { [ wall? ] [ organism>> ] } && ;
+  { [ wall? ] [ organism>> ] } 1&& ;
 : find-skin ( cellular -- skin/f )
   [ skin? ] find-parent ;
 : cell-coordinates ( cellular -- pairs )
   [ dup skin? not ] [ [ parent>> ] [ cell-coordinate ] bi ] produce nip <reversed> ;
-
-: get-rel-cells ( cell pairs -- cells )
-  [ [ parent>> grid>> ] [ cell-coordinates last ] bi ]
-  [ [ v+ swap matrix-nth ] 2with map ] bi*
-  ;
 
 : <cancer> ( m n -- cancer )
   carcinogen <matrix-by-indices> ;

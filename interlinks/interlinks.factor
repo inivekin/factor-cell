@@ -41,23 +41,13 @@ SYMBOL: absorbing-cell
 : set-absorbing-cell ( cell -- )
   absorbing-cell set ;
 
-! SYMBOL: absorbing-cell
-! 
-! : get-cell-from-coords ( str -- obj )
-!   2parse-cell-coords absorbing-cell get find-wall cell-nth ;
-! 
-! : get-cell-contents-from-coords ( str -- obj )
-!   get-cell-from-coords absorb ;
-! 
-! : get-relative-cell-from-coords ( str -- obj )
-!   2parse-cell-coords absorbing-cell get [ pair>> v+ ] [ find-wall ] bi cell-nth ;
-! 
-! : get-relative-cell-contents-from-coords ( str -- obj )
-!   get-relative-cell-from-coords absorb ;
+: get-rel-cell ( wall ref-pair rel-pair -- cell )
+  v+ swap matrix-nth ;
+: get-rel-cells ( cell pairs -- cells )
+  [ [ parent>> grid>> ] [ cell-coordinate ] bi ]
+  [ [ get-rel-cell ] 2with map ] bi*
+  ;
 
-
-! can only be used within a cell
-! SYNTAX: # scan-token get-cell-contents-from-coords suffix ;
-! SYNTAX: ## scan-token get-cell-from-coords clone suffix ;
-! SYNTAX: & scan-token get-relative-cell-contents-from-coords suffix ;
 : #@ ( -- cell ) absorbing-cell get ;
+SYNTAX: #& #@ [ parent>> grid>> ] [ cell-coordinate ] bi scan-token parse-cell-coords last get-rel-cell suffix ;
+SYNTAX: ## #@ parent>> grid>> scan-token parse-cell-coords last swap matrix-nth suffix ;

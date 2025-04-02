@@ -2,6 +2,8 @@ USING: cells ui.gadgets.sheets proteins interlinks ;
 FROM: namespaces => set ;
 IN: membranes
 
+M: membrane-control present cell-coordinate 1array  make-cell-coords ;
+
 : <membrane-control> ( cell -- membrane )
   f membrane-control new-pane
   ! you're gonna need to curry that pane, son.
