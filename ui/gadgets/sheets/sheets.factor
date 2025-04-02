@@ -27,8 +27,6 @@ SYMBOL: focussed-coord
 : n-after ( pair n -- 'pair )
   '[ _ + ] over 1 spin change-nth ;
 
-
-
 : (row-limits) ( pair wall -- index max ) [ first ] [ grid>> length ] bi* ;
 : (col-limits) ( pair wall -- index max ) [ second ] [ grid>> first length ] bi* ;
 

@@ -18,9 +18,10 @@ INSTANCE: wall organisable
   { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ;
 : (metabolise) ( obj -- matrix )
   {
-    { [ dup non-empty-matrix? ] [ [ { } like ] { } map-as ] }
+    { [ dup first non-empty-matrix? ] [ [ { } like ] { } map-as flip concat ] }
     { [ dup { [ length 1 = ] [ first tuple? ] } 1&& ] [ first tuple>matrix flip ] }
-    ! { [ dup { [ sequence? ] [ empty? not ] } 1&& ] [ 1array ] }
+    { [ dup first { [ sequence? ] [ empty? not ] } 1&& ] [ 1array concat ] }
+    ! TODO make this 1d handling work for straight up gene cells { [ dup { [ sequence? ] [ empty? not ] } 1&& ] [ 1array ] }
     [ throw ]
   } cond ;
   
@@ -42,15 +43,13 @@ INSTANCE: wall organisable
          dup wrapper? [ wrapped>> class? ] [ drop f ] if ]
   } 1&&
   ;
-: auto-rank-down ( matrix -- sequence )
-  dup dimension first2 [ 1 = [ flip concat ] when ] dip 1 = [ concat ] when ;
 DEFER: organise
 M: membrane-control organise cell>> control-value genes>> { } like ;
 M: wall organise 
   grid>> {
     { [ dup tuple-as-matrix? ] [ matrix>tuple ] } ! 1x2 with with class type as first elem forms a tuple
-    ! rank 1 matrix concats to array to mirror metabolise making an array into a rank1 matrix thing
-    { [ dup matrix? ] [ [ organise ] matrix-map auto-rank-down auto-rank-down ] }
+    { [ dup first matrix? ] [ [ organise ] matrix-map concat ] }
+    { [ dup first sequence? ] [ [ organise ] matrix-map [ concat ] map flip ] }
     [ throw ]
   } cond
   ; recursive
@@ -59,13 +58,14 @@ M: wall organise
   [ loc>> ] [ dim>> 2 v/n ] bi <rect> ;
 : show-splicer ( cell -- )
   [ dup control-value genes>> [ [ dup { [ wall? ] [ membrane-control? ] } 1|| [ "## " swap present append write " " write ] [ . ] if ] each ] with-string-writer ]
-  [ [ [ skin? ] find-parent organism>> splicer>> ] keep
+  [ [ find-skin organism>> splicer>> ] keep
     >>splicing [ set-editor-string ] keep
-    { 2 2 } <border> white-interior
+    { 2 2 } <border> ! <scroller> { 2 2 } >>gap
+    white-interior
     popup-color <solid> >>boundary
   ]
   [ gadget>rect ] tri
-  over [ show-glass ] dip request-focus ;
+  over [ show-glass ] dip [ relayout ] [ request-focus ] bi ;
 
 : <organism> ( -- organism )
   organism new

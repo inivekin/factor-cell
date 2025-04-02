@@ -3,13 +3,15 @@ FROM: ui.gadgets.scrollers.private => update-scroller ;
 IN: wall
 
 ! don't update scroller if lower focused gadget already updated?
-! M: wall update-scroller 2drop ;
+M: wall update-scroller 2drop ;
+M: wall present cell-coordinate 1array  make-cell-coords ;
 
 : pad-cols-after-amount ( cells sheet-grid -- n )
   [ dimension second ] bi@ - ;
 
 : probe ( skin pairs -- cell )
-  [ swap grid>> matrix-nth ] each ;
+  [ over clamp-pair-to-wall
+    swap grid>> matrix-nth ] each ;
   
 : skin? ( cellular -- organism/? )
   { [ wall? ] [ organism>> ] } 1&& ;
@@ -50,16 +52,14 @@ IN: wall
 :: submatrix ( matrix pair-from pair-to  -- submatrix )
   matrix pair-to pair-from v- [ <iota> ] map first2 [ pair-from first v+n swap rows ] [ pair-from second v+n swap cols ] bi* ;
 
-: insert-after ( cell pair-from pair-to  -- )
-  ! [ [ parent>> grid>> ] 2dip submatrix mitosis ] ! FIXME use mutagen dna to generate cells
-  [ swap v- nip first2 <cancer> ]
-  [ drop { 0 1 } v+ swap parent>> ] 3bi n-col-insert ;
+: insert-after ( cell pair-from pair-to quot: ( cell-pair-from pair-to -- cells ) -- )
+  '[ _ call( cell pair-from pair-to -- cells ) ] 3keep 
+  drop { 0 1 } v+ swap parent>> n-col-insert ;
 : remove-after ( cell n -- removed )
   over [ cell-coordinate ] [ ] [ parent>> ] tri* remove-cols ;
-: insert-below ( cell pair-from pair-to -- )
-  ! [ [ parent>> grid>> ] 2dip submatrix mitosis ]
-  [ swap v- nip first2 <cancer> ]
-  [ drop { 1 0 } v+ swap parent>> ] 3bi n-row-insert ;
+: insert-below ( cell pair-from pair-to quot: ( cell-pair-from pair-to -- cells ) -- )
+  '[ _ call( cell pair-from pair-to -- cells ) ] 3keep 
+  drop { 1 0 } v+ swap parent>> n-row-insert ;
 : remove-below ( cell n -- removed )
   over [ cell-coordinate ] [ ] [ parent>> ] tri* remove-rows ;
 

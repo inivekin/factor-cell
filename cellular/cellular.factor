@@ -7,10 +7,8 @@ IN: cellular
 : undye ( cell -- )
   dup wall? line-color content-background ? <solid> >>boundary relayout-1 ;
 
-: focus-cell ( membrane -- )
-  [ request-focus ]
-  [ cell-coordinate focussed-coord set ] bi ;
-
+: focus-cell ( membrane -- ) request-focus ;
+: com-focus-cell ( membrane -- ) focus-cell ;
 : focus-membrane-above ( membrane -- )
   1 n-cell-above focus-cell ;
 : focus-membrane-below ( membrane -- )
@@ -31,10 +29,10 @@ IN: cellular
   ! { mouse-enter tint-cell }
   ! { mouse-leave untint-cell }
   { T{ button-up } focus-cell }
-  { T{ key-up f f "k" } focus-membrane-above }
-  { T{ key-up f f "h" } focus-membrane-before }
-  { T{ key-up f f "j" } focus-membrane-below }
-  { T{ key-up f f "l" } focus-membrane-after }
+  { T{ key-down f f "k" } focus-membrane-above }
+  { T{ key-down f f "h" } focus-membrane-before }
+  { T{ key-down f f "j" } focus-membrane-below }
+  { T{ key-down f f "l" } focus-membrane-after }
   { T{ key-up f f "ESC" } focus-out }
   { T{ key-up f f "RET" } focus-in }
   { T{ key-up f f "/" } highlighter-search }
@@ -45,11 +43,15 @@ IN: cellular
   { T{ key-up f { C+ } ";" } grow-after }
   { T{ key-up f f "," } excise-below }
   { T{ key-up f { C+ } "," } excise-after }
+  { T{ key-up f f ":" } split-below }
+  { T{ key-up f { C+ } ":" } split-after }
 
   { T{ key-up f f "u" } unmutate-once }
   { T{ key-up f f "U" } remutate-once }
-  { T{ key-up f f "f" } freeze }
-  { T{ key-up f f "F" } thaw }
+  { T{ key-up f f "f" } freeze-colony }
+  { T{ key-up f f "F" } thaw-colony }
+
+  { T{ button-up { mods { S+ } } { # 1 } } reference-cell-in-splicer }
 } define-command-map ] each
 
 membrane-control "splicing" f {
@@ -58,7 +60,7 @@ membrane-control "splicing" f {
 
 wall "organising" f {
   { T{ key-up f f "TAB" } siphon-up }
-  { T{ key-up f { C+ } "TAB" } swivel }
+  { T{ key-up f { C+ } "TAB" } swivel-colony }
 } define-command-map
 membrane-control "organising" f {
   { T{ button-up { # 2 } } splinter }
@@ -68,3 +70,7 @@ membrane-control "organising" f {
 { membrane-control wall } [ "common" f {
     { T{ key-down f ${ os macos? M+ A+ ? } "t" } show-active-buttons-popup }
 } define-command-map ] each
+
+[ { [ membrane-control? ] [ wall? ] } 1|| ] \ com-focus-cell H{
+    { +primary+ t }
+} define-operation
