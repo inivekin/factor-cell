@@ -50,4 +50,3 @@ SYMBOL: absorbing-cell
 
 : #@ ( -- cell ) absorbing-cell get ;
 SYNTAX: #& #@ [ parent>> grid>> ] [ cell-coordinate ] bi scan-token parse-cell-coords last get-rel-cell suffix ;
-SYNTAX: ## #@ parent>> grid>> scan-token parse-cell-coords last swap matrix-nth suffix ;

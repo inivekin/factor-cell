@@ -3,22 +3,27 @@ FROM: ui.gadgets.scrollers.private => update-scroller ;
 IN: wall
 
 ! don't update scroller if lower focused gadget already updated?
-M: wall update-scroller 2drop ;
-M: wall present cell-coordinate 1array  make-cell-coords ;
+! M: wall update-scroller 2drop ;
 
 : pad-cols-after-amount ( cells sheet-grid -- n )
   [ dimension second ] bi@ - ;
 
 : probe ( skin pairs -- cell )
   [ over clamp-pair-to-wall
-    swap grid>> matrix-nth ] each ;
-  
+   swap grid>> matrix-nth ] each ;
+
 : skin? ( cellular -- organism/? )
   { [ wall? ] [ organism>> ] } 1&& ;
 : find-skin ( cellular -- skin/f )
   [ skin? ] find-parent ;
 : cell-coordinates ( cellular -- pairs )
   [ dup skin? not ] [ [ parent>> ] [ cell-coordinate ] bi ] produce nip <reversed> ;
+
+M: probe-able capture-cell ( cell -- capture )
+  [ cell-coordinates ] [ find-skin ] bi capture boa ;
+
+
+M: capture present pairs>> make-cell-coords " ## " " " surround ;
 
 : <cancer> ( m n -- cancer )
   carcinogen <matrix-by-indices> ;

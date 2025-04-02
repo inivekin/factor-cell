@@ -3,6 +3,17 @@ FROM: help.syntax.private => parse-help-text ;
 IN: proteins
 
 TUPLE: membrane-control < pane-control cell ;
+TUPLE: wall < frame organism ;
+
+MIXIN: probe-able
+
+INSTANCE: membrane-control probe-able
+INSTANCE: wall probe-able
+
+GENERIC: capture-cell ( cell -- capture )
+GENERIC: uncapture-cell ( capture -- cell )
+
+TUPLE: capture pairs skin ;
 
 TUPLE: fold sources genes drains ;
 TUPLE: chain genes ;
@@ -25,12 +36,12 @@ SYNTAX: ..: \ ; parse-help-text default-style get <gattaca> suffix ;
     [ . ]
   } cond ;
 
-TUPLE: wall < frame organism ;
 
 GENERIC: synthesize ( protein -- )
 : default-display ( seq -- )
   [ [ {
-        { [ dup { [ membrane-control? ] [ wall? ] } 1|| ] [ "## " swap [ present append ] [ ] bi write-object nl ] }
+        { [ dup capture? ] [ [ present ] [ ] bi write-object nl ] }
+        { [ dup { [ membrane-control? ] [ wall? ] } 1|| ] [ capture-cell [ present ] [ ] bi write-object nl ] }
         { [ dup gadget? ] [ gadget. ] }
         { [ dup gattaca? ] [ gattaca. ] }
         [ . ]
@@ -38,10 +49,12 @@ GENERIC: synthesize ( protein -- )
   ] each ] with-short-limits 
   ;
 M: chain synthesize genes>> default-display ;
-M: fold synthesize [ drains>> ] [ sources>> ] [ genes>> ] tri
+M: fold synthesize [ drains>> ] [ sources>> ] [ genes>> ] tri [ [ dup capture?  [ uncapture-cell ] when ] map ] bi@
                    [ with-datastack dup empty? [ 2drop ] ] keep
                    '[
                       _ default-display
-                      [ [ ] curry <chain> swap cell>> model>> set-model ] 2each
+                      [
+                        dup { [ membrane-control? ] [ wall? ] } 1|| [ capture-cell [ ] curry ] [ [ ] curry ] if
+                        <chain> swap cell>> model>> set-model ] 2each
                     ] if ;
 

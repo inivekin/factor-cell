@@ -14,12 +14,15 @@ GENERIC: organise ( cell -- obj )
 INSTANCE: membrane-control organisable
 INSTANCE: wall organisable
 
+: #> ( membrane-control -- obj )
+  cell>> control-value genes>> { } like ;
+
 : non-empty-matrix? ( x -- ? )
   { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ;
 : (metabolise) ( obj -- matrix )
   {
     { [ dup first non-empty-matrix? ] [ [ { } like ] { } map-as flip concat ] }
-    { [ dup { [ length 1 = ] [ first tuple? ] } 1&& ] [ first tuple>matrix flip ] }
+    { [ dup { [ length 1 = ] [ first tuple? ] } 1&& ] [ first tuple>matrix ] }
     { [ dup first { [ sequence? ] [ empty? not ] } 1&& ] [ 1array concat ] }
     ! TODO make this 1d handling work for straight up gene cells { [ dup { [ sequence? ] [ empty? not ] } 1&& ] [ 1array ] }
     [ throw ]
@@ -57,7 +60,18 @@ M: wall organise
 : gadget>rect ( gadget -- rect )
   [ loc>> ] [ dim>> 2 v/n ] bi <rect> ;
 : show-splicer ( cell -- )
-  [ dup control-value genes>> [ [ dup { [ wall? ] [ membrane-control? ] } 1|| [ "## " swap present append write " " write ] [ . ] if ] each ] with-string-writer ]
+!   ! dup absorbing-cell [
+!   [ dup control-value genes>> [
+!      {
+!        { [ dup capture? ] [ present write ] }
+!        { [ dup { [ wall? ] [ membrane-control? ] } 1|| ] [ capture-cell present write ] }
+!        [ . ]
+!      } cond
+!     ] each
+!   ] with-string-writer 
+!   ! ] with-variable
+  [ dup control-value genes>> [ [ { { [ dup { [ wall? ] [ membrane-control? ] } 1|| ] [ capture-cell present write ] } { [ dup capture? ] [ present write ] } [ . ] } cond ] each ] with-string-writer ]
+  ! [ dup control-value genes>> [ [ dup capture? [ present write ] [ . ] if ] each ] with-string-writer ]
   [ [ find-skin organism>> splicer>> ] keep
     >>splicing [ set-editor-string ] keep
     { 2 2 } <border> ! <scroller> { 2 2 } >>gap

@@ -185,7 +185,7 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
         { [ dup ribozymes>> ] [ [ ribozymes>> ] [ pathway>> ] bi v- ] }
         [ drop { 0 0 } ]
       } cond
-      n-cell-relative [ request-focus ] [ relayout ] [ scroll>gadget ] tri
+      n-cell-relative [ relayout ] [ request-focus ] [ scroll>gadget ] tri
   ] if
   ;
    
@@ -326,9 +326,22 @@ FROM: ui.gadgets.glass.private => glass? ;
   [ world get world-focus swap over gadget>rect show-glass ] [ request-focus ] bi ;
 
 : reference-cell-in-splicer ( cell -- )
-  [ [ " ## " swap present append write " " write ] with-string-writer ] [ find-skin organism>> splicer>> [ user-input ] keep ]
+  [ capture-cell present ] [ find-skin organism>> splicer>> [ user-input ] keep ]
   [ swap over [ popup-color <solid> >>boundary ] [ gadget>rect ] bi* ] tri over [ show-glass ] [ request-focus ] bi*
   ;
+
+:: splinter-reprobe ( cell pair sheet -- cell )
+  cell membrane-control? [ cell splinter pair sheet matrix-nth ] [ cell ] if
+  ;
+: mutating-probe ( skin pairs -- cell )
+  unclip-last [ [ over clamp-pair-to-wall
+    swap grid>> [ matrix-nth ] [ splinter-reprobe ] 2bi ] each ] [ swap grid>> matrix-nth ] bi* ;
+M: capture uncapture-cell ( capture -- cell )
+  [ skin>> ] [ pairs>> ] bi mutating-probe ;
+SYNTAX: ## #@ find-skin scan-token parse-cell-coords
+     swap capture boa suffix ;
+     ! mutating-probe suffix ;
+     ! mutating-probe capture-cell suffix \ uncapture-cell suffix ;
 
 splicer "splicing" f {
   { T{ key-down f f "RET" } splice-below }
