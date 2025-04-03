@@ -318,11 +318,14 @@ FROM: ui.gadgets.glass.private => glass? ;
 : hide-glass-without-refocus ( glass -- )
     [ glass? ] find-parent
     [ dup find-world [ unparent ] dip drop ] when* ;
+CONSTANT: cell-search-limit 50
 :: highlighter-search ( cell -- )
   cell dup membrane-control? [ parent>> ] when :> searching-cell
-  searching-cell grid>> [ [ cell-coordinates make-cell-coords ] [ gadget-text ] [ ] tri 3array ] matrix-map concat <model>
+  searching-cell grid>> [ [ cell-coordinates make-cell-coords ] [ gadget-text cell-search-limit index-or-length head ] [ ] tri 3array ] matrix-map concat <model>
   [ { 0 1 } swap cols flip ] <arrow> trivial-renderer [ second ] <search-table> dup table>>
-  [ first parse-cell-coords searching-cell find-skin swap probe request-focus ] >>action [ hide-glass-without-refocus ] >>hook t >>selection-required? drop
+  [ first parse-cell-coords searching-cell find-skin swap probe request-focus ] >>action [ hide-glass-without-refocus ] >>hook t >>selection-required?
+  10 >>min-rows 10 >>max-rows 30 >>min-cols 30 >>max-cols drop
+  <scroller> white-interior
   [ world get world-focus swap over gadget>rect show-glass ] [ request-focus ] bi ;
 
 : reference-cell-in-splicer ( cell -- )

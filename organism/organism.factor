@@ -15,7 +15,7 @@ INSTANCE: membrane-control organisable
 INSTANCE: wall organisable
 
 : #> ( membrane-control -- obj )
-  cell>> control-value genes>> { } like ;
+  cell>> control-value genes>> [ clone ] { } map-as ;
 
 : non-empty-matrix? ( x -- ? )
   { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ;

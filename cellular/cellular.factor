@@ -20,7 +20,7 @@ IN: cellular
   1 n-cell-after focus-cell ;
 
 : focus-out ( membrane -- )
-  dup skin? [ drop ] [ parent>> request-focus ] if ;
+  dup skin? [ drop ] [ parent>> dup skin? [ drop ] [ request-focus ] if ] if ;
 : focus-in ( membrane -- )
   dup wall? [ gadget-child request-focus ] [ drop ] if ;
 
