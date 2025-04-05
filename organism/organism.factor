@@ -16,6 +16,8 @@ INSTANCE: wall organisable
 
 : #> ( membrane-control -- obj )
   cell>> control-value genes>> [ clone ] { } map-as ;
+: #& ( membrane-control -- model )
+  cell>> model>> ;
 
 : non-empty-matrix? ( x -- ? )
   { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ;
@@ -59,27 +61,15 @@ M: wall organise
 
 : gadget>rect ( gadget -- rect )
   [ loc>> ] [ dim>> 2 v/n ] bi <rect> ;
+: deactivate-dermal-splicer ( splicer -- )
+  parent>> <gadget> { 0 1 } grid-add { 0 0 } >>filled-cell drop ;
+: activate-dermal-splicer ( dermis -- splicer )
+  [ parent>> parent>> parent>> ] [ organism>> splicer>> ] bi { 0 1 } grid-add
+  grid>> { 1 0 } swap matrix-nth ;
 : show-splicer ( cell -- )
-!   ! dup absorbing-cell [
-!   [ dup control-value genes>> [
-!      {
-!        { [ dup capture? ] [ present write ] }
-!        { [ dup { [ wall? ] [ membrane-control? ] } 1|| ] [ capture-cell present write ] }
-!        [ . ]
-!      } cond
-!     ] each
-!   ] with-string-writer 
-!   ! ] with-variable
-  [ dup control-value genes>> [ [ { { [ dup { [ wall? ] [ membrane-control? ] } 1|| ] [ capture-cell present write ] } { [ dup capture? ] [ present write ] } [ . ] } cond ] each ] with-string-writer ]
-  ! [ dup control-value genes>> [ [ dup capture? [ present write ] [ . ] if ] each ] with-string-writer ]
-  [ [ find-skin organism>> splicer>> ] keep
-    >>splicing [ set-editor-string ] keep
-    { 2 2 } <border> ! <scroller> { 2 2 } >>gap
-    white-interior
-    popup-color <solid> >>boundary
-  ]
-  [ gadget>rect ] tri
-  over [ show-glass ] dip [ relayout ] [ request-focus ] bi ;
+  [ control-value genes>> [ [ { { [ dup { [ wall? ] [ membrane-control? ] } 1|| ] [ capture-cell present write ] } { [ dup capture? ] [ present write ] } [ . ] } cond ] each ] with-string-writer ]
+  [ find-dermis activate-dermal-splicer ]
+  [ >>splicing [ set-editor-string ] keep request-focus ] tri ;
 
 : <organism> ( -- organism )
   organism new
@@ -92,10 +82,16 @@ M: wall organise
 
 : <cellular-organism> ( rows cols -- gadget )
   [ 2array drop { } [ "e to edit" print-element ] { } <fold> <cell> ] <cells>
-  <organism> <skin> <scroller> white-interior
+  <organism> <dermis> 
+  ;
+
+: <epidermis> ( row cols -- gadget )
+  <cellular-organism> [ drop <gadget> ] [ <scroller> white-interior ] bi
+  ! [ <cell> ] bi@ 2array 1array flip <wall>
+  1 2 <frame> swap { 0 0 } grid-add swap { 0 1 } grid-add white-interior { 0 0 } >>filled-cell
   ;
 
 : <amoeba> ( -- gadget )
-  1 1 <cellular-organism>
+  1 1 <epidermis>
   ;
 

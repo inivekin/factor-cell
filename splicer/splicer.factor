@@ -19,5 +19,6 @@ TUPLE: splicer < interactor splicing ?manifest? ;
   dup one-word-elt <element-model> >>token-model
   dup model>> <history> >>history
   [ manifest get ] with-interactive-vocabs >>?manifest?
+  white-interior
   ;
 

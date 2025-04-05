@@ -9,7 +9,7 @@ IN: cellular
   dup wall? line-color content-background ? <solid> >>boundary relayout-1 ;
 
 : focus-cell ( membrane -- ) [ request-focus ] [ scroll>gadget ] bi ;
-: com-focus-cell ( membrane -- ) [ skin>> ] [ pairs>> ] bi mutating-probe focus-cell ;
+: com-focus-cell ( membrane -- ) [ dermis>> ] [ pairs>> ] bi mutating-probe focus-cell ;
 : focus-membrane-above ( membrane -- )
   1 n-cell-above focus-cell ;
 : focus-membrane-below ( membrane -- )
@@ -20,7 +20,7 @@ IN: cellular
   1 n-cell-after focus-cell ;
 
 : focus-out ( membrane -- )
-  dup skin? [ drop ] [ parent>> dup skin? [ drop ] [ request-focus ] if ] if ;
+  dup dermis? [ drop ] [ parent>> dup dermis? [ drop ] [ request-focus ] if ] if ;
 : focus-in ( membrane -- )
   dup wall? [ gadget-child request-focus ] [ drop ] if ;
 
@@ -29,7 +29,7 @@ IN: cellular
   { lose-focus undye }
   ! { mouse-enter tint-cell }
   ! { mouse-leave untint-cell }
-  { T{ button-up } focus-cell }
+  { T{ button-down { # 1 } } focus-cell }
   { T{ key-down f f "k" } focus-membrane-above }
   { T{ key-down f f "h" } focus-membrane-before }
   { T{ key-down f f "j" } focus-membrane-below }

@@ -8,19 +8,19 @@ IN: wall
 : pad-cols-after-amount ( cells sheet-grid -- n )
   [ dimension second ] bi@ - ;
 
-: probe ( skin pairs -- cell )
+: probe ( dermis pairs -- cell )
   [ over clamp-pair-to-wall
    swap grid>> matrix-nth ] each ;
 
-: skin? ( cellular -- organism/? )
+: dermis? ( cellular -- organism/? )
   { [ wall? ] [ organism>> ] } 1&& ;
-: find-skin ( cellular -- skin/f )
-  [ skin? ] find-parent ;
+: find-dermis ( cellular -- dermis/f )
+  [ dermis? ] find-parent ;
 : cell-coordinates ( cellular -- pairs )
-  [ dup skin? not ] [ [ parent>> ] [ cell-coordinate ] bi ] produce nip <reversed> ;
+  [ dup dermis? not ] [ [ parent>> ] [ cell-coordinate ] bi ] produce nip <reversed> ;
 
 M: probe-able capture-cell ( cell -- capture )
-  [ cell-coordinates ] [ find-skin ] bi capture boa ;
+  [ cell-coordinates ] [ find-dermis ] bi capture boa ;
 
 
 M: capture present pairs>> make-cell-coords " ## " " " surround ;
@@ -75,7 +75,7 @@ M: capture present pairs>> make-cell-coords " ## " " " surround ;
 : <wall> ( cells -- wall )
   dup dimension first2 wall new-frame { 2 2 } >>gap swap
   [ 2array [ <membrane-control> ] dip grid-add ] matrix-each-index ;
-: <skin> ( cells organism -- wall )
+: <dermis> ( cells organism -- wall )
   [ <wall> ]
   [ >>organism ] bi* ;
 

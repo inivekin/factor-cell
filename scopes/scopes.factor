@@ -20,8 +20,16 @@ DEFER: filescope
 : (freezerscope) ( button cell -- )
   '[ [ _ cell>> control-value genes>> call( -- ) ] vertical #@ gene-expression ] with-#scope ;
 
+: ([freezer-cell]) ( cell -- quot: ( cell in-pairs out-pairs -- cells ) )
+  '[ 3drop _ 1array 1array mitosis ] ;
+: [freezer-cell] ( freezer-gadget -- quot: ( cell in-pairs out-pairs -- cells ) )
+  '[ [ 
+        #@ cell-coordinates vertical { 1 1 }
+        _ ([freezer-cell]) <growth> #@ find-dermis mutate
+   ] with-#scope ]
+  ;
 : freezerscope ( -- gadget )
-  freezer get [ >alist ] <arrow> [ [ first2 [ <label> ] dip [ (freezerscope) ] curry <roll-button> gadget. ] each ] <pane-control> ;
+  freezer get [ >alist ] <arrow> [ [ first2 [ <label> ] dip [freezer-cell] <roll-button> gadget. ] each ] <pane-control> ;
 
 : ./ ( -- pathname ) current-directory get ;
 : skill-gadget ( pathname -- gadget )
@@ -32,7 +40,7 @@ DEFER: filescope
   '[ [
     #@ cell-coordinates horizontal { 1 1 } _ random
     deep-clone ([skill-cell]) <growth>
-    #@ find-skin mutate
+    #@ find-dermis mutate
   ] with-#scope ]
   ;
 : skill-deck ( -- skillwall )
@@ -41,4 +49,11 @@ DEFER: filescope
   [ ./ directory-files [ ".png" tail? ] filter [ skill-gadget ] map ] with-directory
   [skill-cell]
   <roll-button> ;
+
+: rgb-background-interactive ( -- gadget )
+  ## 0@ #&
+  ## 1@ #&
+  ## 2@ #&
+  3array <product> #@ '[ [ genes>> ] map concat first3 1 <rgba> <solid> _ interior<< ] <pane-control>
+  ;
 

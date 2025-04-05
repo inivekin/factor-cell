@@ -4,8 +4,8 @@ IN: mutation
 
 MIXIN: mutagen
 
-GENERIC: (mutate) ( skin mutation mutagen -- )
-GENERIC: (unmutate) ( skin mutation mutagen -- )
+GENERIC: (mutate) ( dermis mutation mutagen -- )
+GENERIC: (unmutate) ( dermis mutation mutagen -- )
 
 INITIALIZED-SYMBOL: freezer [ LH{ } clone <model> ]
 
@@ -93,7 +93,7 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
 : <thaw-table> ( cell -- table )
   [ freezer get [ keys [ ">" swap 2array ] map ] <arrow> trivial-renderer [ second ] <search-table> dup table>> ] dip
   [ cell-coordinate ] [ parent>> ] bi
-  '[ second freezer get value>> at _ _ swapout drop ] >>action [ hide-glass ] >>hook t >>selection-required? t >>takes-focus? drop
+  '[ second freezer get value>> at cell>> <membrane-control> _ _ swapout drop ] >>action [ hide-glass ] >>hook t >>selection-required? t >>takes-focus? drop
   ;
 : show-cryogenics-popup ( cell -- )
   <cryogenics-table> [ world get world-focus swap over gadget>rect show-glass ] [ request-focus ] bi ;
@@ -127,7 +127,7 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
 
 : ?. ( quot -- )
   [ get-listener output>> ] dip with-pane ; inline
-: (?undo/redo.) ( skin -- )
+: (?undo/redo.) ( dermis -- )
   '[ [ _ organism>> [ \ undo>> . undo>> . ] [ \ redo>> . redo>> . ] [ \ waste>> . waste>> . ] tri ] ?. ] with-short-limits ;
 : ?undo/redo. ( quot -- )
   '[ dup (?undo/redo.) @ ] keep (?undo/redo.) ; inline
@@ -155,8 +155,8 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
   [ [ undo>> push ] curry [ last ] bi ] bi
   ;
 
-: defecate ( skin waste -- ) swap organism>> waste>> push ;
-: biopsy ( skin mutation -- cell ) nucleus>> probe ; 
+: defecate ( dermis waste -- ) swap organism>> waste>> push ;
+: biopsy ( dermis mutation -- cell ) nucleus>> probe ; 
 M: growth (mutate) drop [ biopsy ] [ (grow) ] bi ;
 M: growth (unmutate) drop [ biopsy ] [ (excise) ] bi drop ;
 M: excise (mutate) drop dupd [ biopsy ] [ (excise) ] bi defecate ;
@@ -177,7 +177,7 @@ M: thaw (unmutate) drop biopsy drop ;
 M: insplice (mutate) drop dupd [ biopsy ] [ (insplice) ] bi defecate ;
 M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (reinsplice) ] 2tri ;
 
-: focus-mutation ( mutation skin -- )
+: focus-mutation ( mutation dermis -- )
   over type>> { [ thaw? ] [ stasis? ] } 1|| [ 2drop ]
   [
       over biopsy
@@ -190,21 +190,21 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
   ;
    
 
-: mutate ( mutation skin -- )
+: mutate ( mutation dermis -- )
   [ store-dna ] ! [ store-dna ] ?undo/redo. ]
   [ swap dup type>> (mutate) ]
   [ focus-mutation ] 2tri ;
-: unmutate ( skin -- )
+: unmutate ( dermis -- )
   [ restore-dna ] ! [ restore-dna ] ?undo/redo. ]
   [ [ swap dup type>> (unmutate) ] [ focus-mutation ] 2bi ] bi ;
-: remutate ( skin -- )
+: remutate ( dermis -- )
   [ unrestore-dna ] ! [ unrestore-dna ] ?undo/redo. ]
   [ [ swap dup type>> (mutate) ] [ focus-mutation ] 2bi ] bi ;
 
 : unmutate-once ( cell -- )
-  find-skin unmutate ;
+  find-dermis unmutate ;
 : remutate-once ( cell -- )
-  find-skin remutate ;
+  find-dermis remutate ;
 
 : (grow?) ( sheet pair splice -- dimension pathway range )
   dup pathway>> [ '[ grid>> dimension { 1 1 } v- [ 1array ] [ _ swap ] bi ]
@@ -218,7 +218,7 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
 : [clone-growth] ( -- quot: ( cell pair-from pair-to -- cells ) )
   [ [ parent>> grid>> ] 2dip submatrix mitosis ] ;
 
-: growth-needed? ( mutation skin -- mutation/f )
+: growth-needed? ( mutation dermis -- mutation/f )
   [ swap nucleus>> unclip-last [ probe ] dip ]
   [ drop [ (grow?) ] [ [ nucleus>> [ [ nip ] with change-last ] keep ] curry 2dip ] bi ]
   [ drop [ dup [ 0 = ] all? [ 3drop f ] ] dip
@@ -227,19 +227,19 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
 : (siphon?) ( cells -- mutations )
   [ dup wall? [ cell-coordinates <siphon> ] [ drop f ] if ] map sift
   ;
-: siphons-needed? ( mutation skin -- mutations )
+: siphons-needed? ( mutation dermis -- mutations )
   over biopsy swap get-out-mutations (siphon?)
   ;
 : grow ( cell pathway -- )
   '[ cell-coordinates _ mutations get 1 2array [cancerous-growth] <growth> ]
-  [ find-skin mutate ] bi ;
+  [ find-dermis mutate ] bi ;
 : grow-below ( cell -- )
   vertical grow ;
 : grow-after ( cell -- )
   horizontal grow ;
 : split ( cell pathway -- )
   '[ cell-coordinates _ mutations get 1 2array [clone-growth] <growth> ]
-  [ find-skin mutate ] bi ;
+  [ find-dermis mutate ] bi ;
 : split-below ( cell -- )
   vertical split ;
 : split-after ( cell -- )
@@ -254,7 +254,7 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
     [ throw ]
   } case 2array
   '[ cell-coordinates _ _ <excise> ]
-  [ [ skin? ] find-parent mutate ] bi ;
+  [ [ dermis? ] find-parent mutate ] bi ;
 : excise-below ( cell -- )
   vertical excision ;
 : excise-after ( cell -- )
@@ -262,27 +262,25 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
 
 : parse-splice ( str splicer -- quot )
                     ! FIXME this won't work for multi-line syntax, do something like listener calculating thread's parse-lines
-  ?manifest?>> '[ [ [ read-quot dup ] [ ] produce nip [ ] concat-as ] _ (with-manifest) ] with-string-reader ;
+  ?manifest?>> '[ [ read-lines parse-lines ] _ (with-manifest) ] with-string-reader ;
 
-: (splice-along) ( splice skin -- )
+: (splice-along) ( splice dermis -- )
   [ [ growth-needed? ] keep [ mutate ] curry when* ]
   [ [ siphons-needed? ] keep [ mutate ] curry each ]
   [ mutate ]
   2tri ;
-: splice-along ( splicer pathway -- )
-  '[
-  [ splicing>> [ find-skin ] [ cell-coordinates ] bi ]
+:: splice-along ( splicer pathway -- )
+  splicer [ splicing>> [ find-dermis ] [ cell-coordinates ] bi ]
   [ editor-string ]
-  [ dup splicing>> absorbing-cell [ parse-splice _ <splice> ] with-variable ]
+  [ dup splicing>> absorbing-cell [ parse-splice pathway <splice> ] with-variable ]
   tri swap (splice-along)
-  ] [ hide-glass ] swap bi ;
-: inplace-splice-along ( splicer pathway -- )
-  '[
-  [ splicing>> [ find-skin ] [ cell-coordinates ] bi ]
+  ;
+:: inplace-splice-along ( splicer pathway -- )
+  splicer [ splicing>> [ find-dermis ] [ cell-coordinates ] bi ]
   [ editor-string ]
-  [ dup splicing>> absorbing-cell [ parse-splice _ <inplace-splice> ] with-variable ]
+  [ dup splicing>> absorbing-cell [ parse-splice pathway <inplace-splice> ] with-variable ]
   tri swap (splice-along)
-  ] [ hide-glass ] swap bi ;
+  ;
 
 : splice-below ( splicer -- )
   vertical splice-along ;
@@ -296,23 +294,21 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
   cell cell-coordinates 
   quot
   pathway
-  <splice> cell find-skin (splice-along)
+  <splice> cell find-dermis (splice-along)
   ;
 
-: resume-selection ( splicer -- )
-  [ hide-glass ] [ splicing>> request-focus ] bi ;
 : splinter ( cell -- )
-  [ cell-coordinates mutations get <splint> ] [ find-skin ] bi mutate ;
+  [ cell-coordinates mutations get <splint> ] [ find-dermis ] bi mutate ;
 : siphon-up ( wall -- )
-  [ cell-coordinates <siphon> ] [ find-skin ] bi mutate ;
+  [ cell-coordinates <siphon> ] [ find-dermis ] bi mutate ;
 
 : swivel-colony ( wall -- )
-  [ cell-coordinates <swivel> ] [ find-skin ] bi mutate ;
+  [ cell-coordinates <swivel> ] [ find-dermis ] bi mutate ;
 
 : freeze-colony ( cell -- )
-  [ cell-coordinates <stasis> ] [ find-skin ] bi mutate ;
+  [ cell-coordinates <stasis> ] [ find-dermis ] bi mutate ;
 : thaw-colony ( cell -- )
-  [ cell-coordinates <thaw> ] [ find-skin ] bi mutate ;
+  [ cell-coordinates <thaw> ] [ find-dermis ] bi mutate ;
 
 FROM: ui.gadgets.glass.private => glass? ;
 : hide-glass-without-refocus ( glass -- )
@@ -323,28 +319,27 @@ CONSTANT: cell-search-limit 50
   cell dup membrane-control? [ parent>> ] when :> searching-cell
   searching-cell grid>> [ [ cell-coordinates make-cell-coords ] [ gadget-text cell-search-limit index-or-length head ] [ ] tri 3array ] matrix-map concat <model>
   [ { 0 1 } swap cols flip ] <arrow> trivial-renderer [ second ] <search-table> dup table>>
-  [ first parse-cell-coords searching-cell find-skin swap probe request-focus ] >>action [ hide-glass-without-refocus ] >>hook t >>selection-required?
+  [ first parse-cell-coords searching-cell find-dermis swap probe request-focus ] >>action [ hide-glass-without-refocus ] >>hook t >>selection-required?
   10 >>min-rows 10 >>max-rows 30 >>min-cols 30 >>max-cols drop
   <scroller> white-interior
   [ world get world-focus swap over gadget>rect show-glass ] [ request-focus ] bi ;
 
 : reference-cell-in-splicer ( cell -- )
-  [ capture-cell present ] [ find-skin organism>> splicer>> [ user-input ] keep ]
-  [ swap over [ popup-color <solid> >>boundary ] [ gadget>rect ] bi* ] tri over [ show-glass ] [ request-focus ] bi*
+  [ capture-cell present ] [ find-dermis activate-dermal-splicer [ user-input ] keep ]
+  [ drop popup-color <solid> >>boundary ] tri request-focus
   ;
+: resume-selection ( splicer -- )
+  [ deactivate-dermal-splicer ] [ splicing>> request-focus ] bi ;
 
 :: splinter-reprobe ( cell pair sheet -- cell )
   cell membrane-control? [ cell splinter pair sheet matrix-nth ] [ cell ] if
   ;
-: mutating-probe ( skin pairs -- cell )
+: mutating-probe ( dermis pairs -- cell )
   unclip-last [ [ over clamp-pair-to-wall
     swap grid>> [ matrix-nth ] [ splinter-reprobe ] 2bi ] each ] [ swap grid>> matrix-nth ] bi* ;
 M: capture uncapture-cell ( capture -- cell )
-  [ skin>> ] [ pairs>> ] bi mutating-probe ;
-SYNTAX: ## #@ find-skin scan-token parse-cell-coords
-     swap capture boa suffix ;
-     ! mutating-probe suffix ;
-     ! mutating-probe capture-cell suffix \ uncapture-cell suffix ;
+  [ dermis>> ] [ pairs>> ] bi mutating-probe ;
+SYNTAX: ## #@ find-dermis scan-token parse-cell-coords swap capture boa suffix ;
 
 splicer "splicing" f {
   { T{ key-down f f "RET" } splice-below }
@@ -352,5 +347,8 @@ splicer "splicing" f {
   { T{ key-down f { A+ } "RET" } insplice-below }
   { T{ key-down f { A+ C+ } "RET" } insplice-after }
   { T{ key-down f f "ESC" } resume-selection }
+
+  
+  ! { lose-focus deactivate-dermal-splicer }
 } define-command-map
 
