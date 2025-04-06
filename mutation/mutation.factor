@@ -106,16 +106,19 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
 
 : get-out-mutations ( cell mutation -- cells )
   [ ribozymes>> expand-range concat ] [ pathway>> <reversed> '[ _ v+ ] map ] bi get-rel-cells ;
+
 : (splice) ( cell mutation -- replaced )
   {
-    [ drop control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???
-    [ [ enzymes>> expand-range concat [ vneg ] map ] [ pathway>> <reversed> '[ _ v- ] map ] bi get-rel-cells [ organise ] map concat ]
-    [ get-out-mutations ] ! [ cell>> ] map ]
-    [ swap [ dna>> swap <fold> ] [ model>> set-model ] bi* ]
+    [ [ enzymes>> expand-range concat [ vneg ] map ] [ pathway>> <reversed> '[ _ v- ] map ] bi get-rel-cells [ organise ] map ]
+    [ get-out-mutations ]
+    [ nip dna>> swap <fold> [ sources>> [ model>> ] map <product> ] [ <cell> ] bi 2array <product> <membrane-control> ]
+    [ drop ]
   }
-  2cleave ;
+  2cleave
+  [ cell-coordinate ] [ parent>> ] bi swapout
+  ;
 : (resplice) ( quot cell mutation -- )
-  drop model>> set-model ;
+  drop model>> (unsiphon) ;
 : (insplice) ( cell mutation -- replaced )
   {
     [ drop control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???

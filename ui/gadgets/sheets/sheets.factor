@@ -75,3 +75,8 @@ SYMBOL: focussed-coord
   [ grid>> (remove-rows) ] keep grid<< ;
 : remove-cols ( pair n sheet -- removed )
   [ <reversed> ] 2dip [ grid>> flip (remove-rows) [ flip ] bi@ ] keep grid<< ;
+
+: swapout ( replacer pair sheet -- replaced )
+  [ grid>> matrix-nth swap ]
+  [ -rot <reversed> grid-add drop ] 2bi ;
+

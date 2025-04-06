@@ -1,15 +1,19 @@
-USING: interlinks ;
+USING: interlinks ui.gadgets.sheets ;
 FROM: help.syntax.private => parse-help-text ;
 IN: proteins
 
 TUPLE: membrane-control < pane-control ;
+TUPLE: membrane < border ;
 TUPLE: wall < frame organism ;
 
 MIXIN: probe-able
 
+: <membrane> ( gadget -- membrane )
+  [ membrane new-border { 2 2 } >>size { 1 1 } >>fill ] [ model>> >>model ] bi ;
+
 INSTANCE: membrane-control probe-able
 INSTANCE: wall probe-able
-INSTANCE: gadget probe-able
+INSTANCE: membrane probe-able
 
 GENERIC: capture-cell ( cell -- capture )
 GENERIC: uncapture-cell ( capture -- cell )
@@ -51,16 +55,16 @@ GENERIC: synthesize ( protein -- )
   ;
 ! use model>> instead of genes>> so that you can put normal gadgets in, treat them as normal cells, give base gadget some cell things
 M: chain synthesize genes>> default-display ;
-M: fold synthesize [ drains>> ] [ sources>> ] [ genes>> ] tri [ [ dup capture? [ uncapture-cell ] when ] map ] bi@
+M: fold synthesize [ drains>> ] [ sources>> [ control-value genes>> ] map concat ] [ genes>> ] tri [ [ dup capture? [ uncapture-cell ] when ] map ] bi@
                    [ with-datastack dup empty? [ 2drop ] ] keep
                    '[
                       _ default-display
                       [
-                        dup
                         {
-                              { [ { [ membrane-control? ] [ wall? ] } 1|| ] [ capture-cell [ ] curry <chain> ] }
-                              [ [ ] curry <chain> ]
+                              { [ dup { [ membrane-control? ] [ wall? ] } 1|| ] [ capture-cell [ ] curry <chain> swap model>> set-model ] }
+                              { [ dup gadget? ] [ <membrane> swap [ cell-coordinate ] [ parent>> ] bi swapout drop ] }
+                              [ [ ] curry <chain> swap model>> set-model ]
                         } cond
-                        swap model>> set-model ] 2each
+                         ] 2each
                     ] if ;
 

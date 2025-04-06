@@ -68,10 +68,7 @@ M: capture present pairs>> make-cell-coords " ## " " " surround ;
 : remove-below ( cell n -- removed )
   over [ cell-coordinate ] [ ] [ parent>> ] tri* remove-rows ;
 
-: swapout ( replacer pair sheet -- replaced )
-  [ grid>> matrix-nth swap ]
-  [ -rot <reversed> grid-add drop ] 2bi ;
-
+! TODO collect each cell model into a wall product, add/remove from product with insertion/removal above
 : <wall> ( cells -- wall )
   dup dimension first2 wall new-frame { 2 2 } >>gap swap
   [ 2array [ <membrane-control> ] dip grid-add ] matrix-each-index ;

@@ -5,7 +5,9 @@ IN: membranes
 : <membrane-control> ( model -- membrane )
   f membrane-control new-pane
   ! you're gonna need to curry that pane, son.
-  dup [ absorbing-cell [ synthesize ] with-variable ] curry >>quot
+  dup [ absorbing-cell [
+      dup sequence? [ last ] when
+      synthesize ] with-variable ] curry >>quot
   swap >>model { 2 2 } >>gap ! 0.5 >>fill
   ; 
 

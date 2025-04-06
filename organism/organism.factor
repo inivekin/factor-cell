@@ -15,7 +15,7 @@ INSTANCE: membrane-control organisable
 INSTANCE: wall organisable
 
 : #> ( membrane-control -- obj )
-  control-value genes>> [ clone ] { } map-as ;
+  control-value [ clone ] { } map-as ;
 : #& ( membrane-control -- model )
   model>> ;
 
@@ -49,7 +49,7 @@ INSTANCE: wall organisable
   } 1&&
   ;
 DEFER: organise
-M: membrane-control organise control-value genes>> { } like ;
+M: membrane-control organise ; ! control-value genes>> { } like ;
 M: wall organise 
   grid>> {
     { [ dup tuple-as-matrix? ] [ matrix>tuple ] } ! 1x2 with with class type as first elem forms a tuple
@@ -68,7 +68,7 @@ M: gadget organise ;
   [ parent>> parent>> parent>> ] [ organism>> splicer>> popup-color <solid> >>boundary ] bi { 0 1 } grid-add
   grid>> { 1 0 } swap matrix-nth ;
 : show-splicer ( cell -- )
-  [ control-value genes>> [ [ { { [ dup { [ wall? ] [ membrane-control? ] } 1|| ] [ capture-cell present write ] } { [ dup capture? ] [ present write ] } [ . ] } cond ] each ] with-string-writer ]
+  [ control-value dup sequence? [ last ] when genes>> [ [ { { [ dup { [ wall? ] [ membrane-control? ] } 1|| ] [ capture-cell present write ] } { [ dup capture? ] [ present write ] } [ . ] } cond ] each ] with-string-writer ]
   [ find-dermis activate-dermal-splicer ]
   [ >>splicing [ set-editor-string ] keep request-focus ] tri ;
 

@@ -17,7 +17,7 @@ IN: cellular
 : focus-in ( membrane -- )
   dup wall? [ gadget-child request-focus ] [ drop ] if ;
 
-{ membrane-control wall } [ "highlighting" f {
+{ membrane-control wall membrane } [ "highlighting" f {
   { gain-focus dye }
   { lose-focus undye }
   ! { mouse-enter tint-cell }
@@ -32,7 +32,7 @@ IN: cellular
   { T{ key-up f f "/" } highlighter-search }
 } define-command-map ] each
 
-{ membrane-control wall } [ "mutating" f {
+{ membrane-control wall membrane } [ "mutating" f {
   { T{ key-up f f ";" } grow-below }
   { T{ key-up f { C+ } ";" } grow-after }
   { T{ key-up f f "," } excise-below }
