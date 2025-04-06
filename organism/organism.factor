@@ -15,9 +15,9 @@ INSTANCE: membrane-control organisable
 INSTANCE: wall organisable
 
 : #> ( membrane-control -- obj )
-  cell>> control-value genes>> [ clone ] { } map-as ;
+  control-value genes>> [ clone ] { } map-as ;
 : #& ( membrane-control -- model )
-  cell>> model>> ;
+  model>> ;
 
 : non-empty-matrix? ( x -- ? )
   { [ matrix? ] [ empty? not ] [ first empty? not ] } 1&& ;
@@ -49,7 +49,7 @@ INSTANCE: wall organisable
   } 1&&
   ;
 DEFER: organise
-M: membrane-control organise cell>> control-value genes>> { } like ;
+M: membrane-control organise control-value genes>> { } like ;
 M: wall organise 
   grid>> {
     { [ dup tuple-as-matrix? ] [ matrix>tuple ] } ! 1x2 with with class type as first elem forms a tuple
@@ -58,13 +58,14 @@ M: wall organise
     [ throw ]
   } cond
   ; recursive
+M: gadget organise ;
 
 : gadget>rect ( gadget -- rect )
   [ loc>> ] [ dim>> 2 v/n ] bi <rect> ;
 : deactivate-dermal-splicer ( splicer -- )
   parent>> <gadget> { 0 1 } grid-add { 0 0 } >>filled-cell drop ;
 : activate-dermal-splicer ( dermis -- splicer )
-  [ parent>> parent>> parent>> ] [ organism>> splicer>> ] bi { 0 1 } grid-add
+  [ parent>> parent>> parent>> ] [ organism>> splicer>> popup-color <solid> >>boundary ] bi { 0 1 } grid-add
   grid>> { 1 0 } swap matrix-nth ;
 : show-splicer ( cell -- )
   [ control-value genes>> [ [ { { [ dup { [ wall? ] [ membrane-control? ] } 1|| ] [ capture-cell present write ] } { [ dup capture? ] [ present write ] } [ . ] } cond ] each ] with-string-writer ]
@@ -88,7 +89,7 @@ M: wall organise
 : <epidermis> ( row cols -- gadget )
   <cellular-organism> [ drop <gadget> ] [ <scroller> white-interior ] bi
   ! [ <cell> ] bi@ 2array 1array flip <wall>
-  1 2 <frame> swap { 0 0 } grid-add swap { 0 1 } grid-add white-interior { 0 0 } >>filled-cell
+  1 2 <frame> { 2 2 } >>gap swap { 0 0 } grid-add swap { 0 1 } grid-add white-interior { 0 0 } >>filled-cell
   ;
 
 : <amoeba> ( -- gadget )

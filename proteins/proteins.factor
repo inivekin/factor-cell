@@ -2,13 +2,14 @@ USING: interlinks ;
 FROM: help.syntax.private => parse-help-text ;
 IN: proteins
 
-TUPLE: membrane-control < pane-control cell ;
+TUPLE: membrane-control < pane-control ;
 TUPLE: wall < frame organism ;
 
 MIXIN: probe-able
 
 INSTANCE: membrane-control probe-able
 INSTANCE: wall probe-able
+INSTANCE: gadget probe-able
 
 GENERIC: capture-cell ( cell -- capture )
 GENERIC: uncapture-cell ( capture -- cell )
@@ -50,12 +51,16 @@ GENERIC: synthesize ( protein -- )
   ;
 ! use model>> instead of genes>> so that you can put normal gadgets in, treat them as normal cells, give base gadget some cell things
 M: chain synthesize genes>> default-display ;
-M: fold synthesize [ drains>> ] [ sources>> ] [ genes>> ] tri [ [ dup capture?  [ uncapture-cell ] when ] map ] bi@
+M: fold synthesize [ drains>> ] [ sources>> ] [ genes>> ] tri [ [ dup capture? [ uncapture-cell ] when ] map ] bi@
                    [ with-datastack dup empty? [ 2drop ] ] keep
                    '[
                       _ default-display
                       [
-                        dup { [ membrane-control? ] [ wall? ] } 1|| [ capture-cell [ ] curry ] [ [ ] curry ] if
-                        <chain> swap cell>> model>> set-model ] 2each
+                        dup
+                        {
+                              { [ { [ membrane-control? ] [ wall? ] } 1|| ] [ capture-cell [ ] curry <chain> ] }
+                              [ [ ] curry <chain> ]
+                        } cond
+                        swap model>> set-model ] 2each
                     ] if ;
 

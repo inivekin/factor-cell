@@ -1,13 +1,6 @@
 USING: mutation scopes wall namespaces ;
 IN: cellular
 
-: dye ( cell -- )
-  [ dup wall? dim-color selection-color ? <solid> >>boundary relayout-1 ] 
-  [ scroll>gadget ]
-  bi ;
-: undye ( cell -- )
-  dup wall? line-color content-background ? <solid> >>boundary relayout-1 ;
-
 : focus-cell ( membrane -- ) [ request-focus ] [ scroll>gadget ] bi ;
 : com-focus-cell ( membrane -- ) [ dermis>> ] [ pairs>> ] bi mutating-probe focus-cell ;
 : focus-membrane-above ( membrane -- )

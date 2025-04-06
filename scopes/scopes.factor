@@ -18,7 +18,7 @@ DEFER: filescope
   ;
 
 : (freezerscope) ( button cell -- )
-  '[ [ _ cell>> control-value genes>> call( -- ) ] vertical #@ gene-expression ] with-#scope ;
+  '[ [ _ control-value genes>> call( -- ) ] vertical #@ gene-expression ] with-#scope ;
 
 : ([freezer-cell]) ( cell -- quot: ( cell in-pairs out-pairs -- cells ) )
   '[ 3drop _ 1array 1array mitosis ] ;

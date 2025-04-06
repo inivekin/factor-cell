@@ -93,7 +93,7 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
 : <thaw-table> ( cell -- table )
   [ freezer get [ keys [ ">" swap 2array ] map ] <arrow> trivial-renderer [ second ] <search-table> dup table>> ] dip
   [ cell-coordinate ] [ parent>> ] bi
-  '[ second freezer get value>> at cell>> <membrane-control> _ _ swapout drop ] >>action [ hide-glass ] >>hook t >>selection-required? t >>takes-focus? drop
+  '[ second freezer get value>> at <membrane-control> _ _ swapout drop ] >>action [ hide-glass ] >>hook t >>selection-required? t >>takes-focus? drop
   ;
 : show-cryogenics-popup ( cell -- )
   <cryogenics-table> [ world get world-focus swap over gadget>rect show-glass ] [ request-focus ] bi ;
@@ -108,22 +108,22 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
   [ ribozymes>> expand-range concat ] [ pathway>> <reversed> '[ _ v+ ] map ] bi get-rel-cells ;
 : (splice) ( cell mutation -- replaced )
   {
-    [ drop cell>> control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???
-    [ [ enzymes>> expand-range concat [ vneg ] map ] [ pathway>> <reversed> '[ _ v- ] map ] bi get-rel-cells [ organise ] map ]
+    [ drop control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???
+    [ [ enzymes>> expand-range concat [ vneg ] map ] [ pathway>> <reversed> '[ _ v- ] map ] bi get-rel-cells [ organise ] map concat ]
     [ get-out-mutations ] ! [ cell>> ] map ]
-    [ swap [ dna>> swap <fold> ] [ cell>> model>> set-model ] bi* ]
+    [ swap [ dna>> swap <fold> ] [ model>> set-model ] bi* ]
   }
   2cleave ;
 : (resplice) ( quot cell mutation -- )
-  drop cell>> model>> set-model ;
+  drop model>> set-model ;
 : (insplice) ( cell mutation -- replaced )
   {
-    [ drop cell>> control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???
-    [ swap [ dna>> <chain> ] [ cell>> model>> set-model ] bi* ]
+    [ drop control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???
+    [ swap [ dna>> <chain> ] [ model>> set-model ] bi* ]
   }
   2cleave ;
 : (reinsplice) ( quot cell mutation -- )
-  drop cell>> model>> set-model ;
+  drop model>> set-model ;
 
 : ?. ( quot -- )
   [ get-listener output>> ] dip with-pane ; inline
@@ -341,6 +341,13 @@ M: capture uncapture-cell ( capture -- cell )
   [ dermis>> ] [ pairs>> ] bi mutating-probe ;
 SYNTAX: ## #@ find-dermis scan-token parse-cell-coords swap capture boa suffix ;
 
+: dye ( cell -- )
+  [ dup wall? dim-color selection-color ? <solid> >>boundary relayout-1 ] 
+  [ scroll>gadget ]
+  bi ;
+: undye ( cell -- )
+  dup wall? line-color content-background ? <solid> >>boundary relayout-1 ;
+
 splicer "splicing" f {
   { T{ key-down f f "RET" } splice-below }
   { T{ key-down f { C+ } "RET" } splice-after }
@@ -350,5 +357,6 @@ splicer "splicing" f {
 
   
   ! { lose-focus deactivate-dermal-splicer }
+  { lose-focus undye }
 } define-command-map
 
