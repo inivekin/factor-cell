@@ -42,8 +42,8 @@ SYNTAX: .. \ ; parse-help-text default-style get <gattaca> suffix ;
   ;
 
 : synthesize ( seq dna: ( seq -- seq  ) -- seq )
-  [ [ dup capture? [ uncapture-cell ] when ] map ] bi@
-  with-datastack ;
+  [ [ [ dup capture? [ uncapture-cell ] when ] map ] bi@ with-datastack ] curry
+  [ nip 1array ] recover ;
 
 : synthesis ( models seq dna -- )
   [ dup empty? [ 2drop ] ] dip

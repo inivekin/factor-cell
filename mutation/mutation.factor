@@ -9,7 +9,7 @@ GENERIC: (unmutate) ( dermis mutation mutagen -- )
 
 INITIALIZED-SYMBOL: freezer [ LH{ } clone <model> ]
 
-! NOTE in/ribozymes is a range of relative cells e.g. { 3 1 } 3rows of 1 column after nucleus
+! NOTE enzymes/ribozymes is a range of relative cells e.g. { 3 1 } 3rows of 1 column after nucleus
 TUPLE: mutation nucleus pathway enzymes ribozymes dna type ;
 C: <mutation> mutation
 SINGLETONS: growth excise splice splint siphon swivel stasis thaw insplice ;
@@ -249,7 +249,12 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
 : split-after ( cell -- )
   horizontal split ;
 
-
+: validate-excision ( mutation cell -- ? )
+  ! if excision will make grid size 0 or less, it cannot happen as it will delete the grid
+  [ enzymes>> ]
+  [ parent>> grid>> dimension ]
+  bi*
+  swap v- [ 0 <= ] all? not ;
 : excision ( cell pathway -- )
   over parent>> grid>> dimension over
   {
@@ -258,14 +263,14 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
     [ throw ]
   } case 2array
   '[ cell-coordinates _ _ <excise> ]
-  [ [ dermis? ] find-parent mutate ] bi ;
+  [ dupd validate-excision ]
+  [ swapd [ dermis? ] find-parent [ mutate ] 2curry when ] tri ;
 : excise-below ( cell -- )
   vertical excision ;
 : excise-after ( cell -- )
   horizontal excision ;
 
 : parse-splice ( str splicer -- quot )
-                    ! FIXME this won't work for multi-line syntax, do something like listener calculating thread's parse-lines
   ?manifest?>> '[ [ read-lines parse-lines ] _ (with-manifest) ] with-string-reader ;
 
 : (splice-along) ( splice dermis -- )
@@ -286,14 +291,16 @@ M: insplice (unmutate) drop [ drop organism>> waste>> pop ] [ biopsy ] [ nip (re
   tri swap (splice-along)
   ;
 
+: resume-selection ( splicer -- )
+  [ deactivate-dermal-splicer ] [ splicing>> request-focus ] bi ;
 : splice-below ( splicer -- )
-  vertical splice-along ;
+  [ vertical splice-along ] keep resume-selection ;
 : splice-after ( splicer -- )
-  horizontal splice-along ;
+  [ horizontal splice-along ] keep resume-selection ;
 : insplice-below ( splicer -- )
-  vertical inplace-splice-along ;
+  [ vertical inplace-splice-along ] keep resume-selection ;
 : insplice-after ( splicer -- )
-  horizontal inplace-splice-along ;
+  [ horizontal inplace-splice-along ] keep resume-selection ;
 :: gene-expression ( quot pathway cell -- )
   cell cell-coordinates 
   quot
@@ -332,9 +339,6 @@ CONSTANT: cell-search-limit 50
   [ capture-cell present ] [ find-dermis activate-dermal-splicer [ user-input ] keep ]
   [ drop popup-color <solid> >>boundary ] tri request-focus
   ;
-: resume-selection ( splicer -- )
-  [ deactivate-dermal-splicer ] [ splicing>> request-focus ] bi ;
-
 :: splinter-reprobe ( cell pair sheet -- cell )
   cell membrane? [ cell splinter pair sheet matrix-nth ] [ cell ] if
   ;
