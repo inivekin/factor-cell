@@ -3,7 +3,7 @@ FROM: ui.gadgets.scrollers.private => update-scroller ;
 IN: wall
 
 ! don't update scroller if lower focused gadget already updated?
-! M: wall update-scroller 2drop ;
+M: wall update-scroller 2drop ;
 
 : pad-cols-after-amount ( cells sheet-grid -- n )
   [ dimension second ] bi@ - ;
@@ -25,8 +25,11 @@ M: probe-able capture-cell ( cell -- capture )
 
 M: capture present pairs>> make-cell-coords " ## " " " surround ;
 
+: [carcinogen] ( -- quot: ( i j -- gadget ) )
+  ! [ 2drop <gadget> membrane new swap add-gadget { 2 2 } >>size { 1 1 } >>fill f <model> >>model ] ; inline
+  [ 2drop { } { } [ ] <membrane> ] ; inline
 : <cancer> ( m n -- cancer )
-  carcinogen <matrix-by-indices> ;
+  [carcinogen] <matrix-by-indices> ;
 
 : pad-cols-before-amount ( pair cells -- m n )
   [ second ] [ dimension first ] bi* swap ;
@@ -71,7 +74,7 @@ M: capture present pairs>> make-cell-coords " ## " " " surround ;
 ! TODO collect each cell model into a wall product, add/remove from product with insertion/removal above
 : <wall> ( cells -- wall )
   dup dimension first2 wall new-frame { 2 2 } >>gap swap
-  [ 2array [ <membrane-control> ] dip grid-add ] matrix-each-index ;
+  [ 2array grid-add ] matrix-each-index ;
 : <dermis> ( cells organism -- wall )
   [ <wall> ]
   [ >>organism ] bi* ;

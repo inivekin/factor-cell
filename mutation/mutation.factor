@@ -81,7 +81,7 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
 : (unsplinter) ( replaced replacer -- )
   [ cell-coordinate ] [ parent>> ] bi swapout drop ;
 : (siphon) ( wall -- replaced )
-  [ cell-coordinate ] [ parent>> ] [ organise [ ] curry <chain> <cell> <membrane-control> ] tri -rot swapout ;
+  [ cell-coordinate ] [ parent>> ] [ organise [ ] curry { } { } rot <membrane> ] tri -rot swapout ;
 : (unsiphon) ( replaced replacer -- )
   [ cell-coordinate ] [ parent>> ] bi swapout drop ;
 : (swivel) ( wall -- )
@@ -93,7 +93,7 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
 : <thaw-table> ( cell -- table )
   [ freezer get [ keys [ ">" swap 2array ] map ] <arrow> trivial-renderer [ second ] <search-table> dup table>> ] dip
   [ cell-coordinate ] [ parent>> ] bi
-  '[ second freezer get value>> at <membrane-control> _ _ swapout drop ] >>action [ hide-glass ] >>hook t >>selection-required? t >>takes-focus? drop
+  '[ second freezer get value>> at _ _ swapout drop ] >>action [ hide-glass ] >>hook t >>selection-required? t >>takes-focus? drop
   ;
 : show-cryogenics-popup ( cell -- )
   <cryogenics-table> [ world get world-focus swap over gadget>rect show-glass ] [ request-focus ] bi ;
@@ -109,9 +109,9 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
 
 : (splice) ( cell mutation -- replaced )
   {
-    [ [ enzymes>> expand-range concat [ vneg ] map ] [ pathway>> <reversed> '[ _ v- ] map ] bi get-rel-cells [ organise ] map ]
+    [ [ enzymes>> expand-range concat [ vneg ] map ] [ pathway>> <reversed> '[ _ v- ] map ] bi get-rel-cells ]
     [ get-out-mutations ]
-    [ nip dna>> swap <fold> [ sources>> [ model>> ] map <product> ] [ <cell> ] bi 2array <product> <membrane-control> ]
+    [ nip dna>> <membrane> ]
     [ drop ]
   }
   2cleave
@@ -120,9 +120,10 @@ INITIALIZED-SYMBOL: mutations [ 1 ]
 : (resplice) ( quot cell mutation -- )
   drop model>> (unsiphon) ;
 : (insplice) ( cell mutation -- replaced )
+  ! if it has dependencies, this action is not ok becase changing the dna may increase/decrease the number of enzymes
   {
     [ drop control-value ] ! NOTE this is the replaced return FIXME should this be doing cell>> also???
-    [ swap [ dna>> <chain> ] [ model>> set-model ] bi* ]
+    [ swap [ dna>> ] [ model>> set-model ] bi* ]
   }
   2cleave ;
 : (reinsplice) ( quot cell mutation -- )
@@ -319,7 +320,7 @@ FROM: ui.gadgets.glass.private => glass? ;
     [ dup find-world [ unparent ] dip drop ] when* ;
 CONSTANT: cell-search-limit 50
 :: highlighter-search ( cell -- )
-  cell dup membrane-control? [ parent>> ] when :> searching-cell
+  cell dup membrane? [ parent>> ] when :> searching-cell
   searching-cell grid>> [ [ cell-coordinates make-cell-coords ] [ gadget-text cell-search-limit index-or-length head ] [ ] tri 3array ] matrix-map concat <model>
   [ { 0 1 } swap cols flip ] <arrow> trivial-renderer [ second ] <search-table> dup table>>
   [ first parse-cell-coords searching-cell find-dermis swap probe request-focus ] >>action [ hide-glass-without-refocus ] >>hook t >>selection-required?
@@ -335,7 +336,7 @@ CONSTANT: cell-search-limit 50
   [ deactivate-dermal-splicer ] [ splicing>> request-focus ] bi ;
 
 :: splinter-reprobe ( cell pair sheet -- cell )
-  cell membrane-control? [ cell splinter pair sheet matrix-nth ] [ cell ] if
+  cell membrane? [ cell splinter pair sheet matrix-nth ] [ cell ] if
   ;
 : mutating-probe ( dermis pairs -- cell )
   unclip-last [ [ over clamp-pair-to-wall
@@ -352,13 +353,12 @@ SYNTAX: ## #@ find-dermis scan-token parse-cell-coords swap capture boa suffix ;
   dup wall? line-color content-background ? <solid> >>boundary relayout-1 ;
 
 splicer "splicing" f {
-  { T{ key-down f f "RET" } splice-below }
-  { T{ key-down f { C+ } "RET" } splice-after }
-  { T{ key-down f { A+ } "RET" } insplice-below }
-  { T{ key-down f { A+ C+ } "RET" } insplice-after }
+  { T{ key-down f { A+ } "RET" } splice-below }
+  { T{ key-down f { A+ C+ } "RET" } splice-after }
+  { T{ key-down f f "RET" } insplice-below }
+  { T{ key-down f { C+ } "RET" } insplice-after }
   { T{ key-down f f "ESC" } resume-selection }
 
-  
   ! { lose-focus deactivate-dermal-splicer }
   { lose-focus undye }
 } define-command-map

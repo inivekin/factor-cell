@@ -11,12 +11,12 @@ TUPLE: organism
 
 MIXIN: organisable
 GENERIC: organise ( cell -- obj )
-INSTANCE: membrane-control organisable
+INSTANCE: membrane organisable
 INSTANCE: wall organisable
 
 : #> ( membrane-control -- obj )
   control-value [ clone ] { } map-as ;
-: #& ( membrane-control -- model )
+: #&> ( membrane-control -- model )
   model>> ;
 
 : non-empty-matrix? ( x -- ? )
@@ -31,7 +31,7 @@ INSTANCE: wall organisable
   } cond ;
   
 : metabolise ( obj -- wall )
-  (metabolise) [ [ ] curry <chain> <cell> ] matrix-map <wall> ;
+  (metabolise) [ [ ] curry { } { } rot <membrane> ] matrix-map <wall> ;
 : matrix>tuple ( matrix -- obj )
   dup dimension second 2 = [ flip ] when first2
   [ first organise
@@ -49,7 +49,7 @@ INSTANCE: wall organisable
   } 1&&
   ;
 DEFER: organise
-M: membrane-control organise ; ! control-value genes>> { } like ;
+M: membrane organise control-value { } like ;
 M: wall organise 
   grid>> {
     { [ dup tuple-as-matrix? ] [ matrix>tuple ] } ! 1x2 with with class type as first elem forms a tuple
@@ -68,7 +68,7 @@ M: gadget organise ;
   [ parent>> parent>> parent>> ] [ organism>> splicer>> popup-color <solid> >>boundary ] bi { 0 1 } grid-add
   grid>> { 1 0 } swap matrix-nth ;
 : show-splicer ( cell -- )
-  [ control-value dup sequence? [ last ] when genes>> [ [ { { [ dup { [ wall? ] [ membrane-control? ] } 1|| ] [ capture-cell present write ] } { [ dup capture? ] [ present write ] } [ . ] } cond ] each ] with-string-writer ]
+  [ control-value [ [ { { [ dup { [ wall? ] [ membrane? ] } 1|| ] [ capture-cell present write ] } { [ dup capture? ] [ present write ] } [ . ] } cond ] each ] with-string-writer ]
   [ find-dermis activate-dermal-splicer ]
   [ >>splicing [ set-editor-string ] keep request-focus ] tri ;
 
@@ -82,7 +82,7 @@ M: gadget organise ;
   ;
 
 : <cellular-organism> ( rows cols -- gadget )
-  [ 2array drop { } [ "e to edit" print-element ] { } <fold> <cell> ] <cells>
+  [ 2array drop { } { } [ "e to edit" print-element ] <membrane> ] <cells>
   <organism> <dermis> 
   ;
 

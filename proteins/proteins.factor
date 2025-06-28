@@ -8,27 +8,10 @@ TUPLE: wall < frame organism ;
 
 MIXIN: probe-able
 
-: <membrane> ( gadget -- membrane )
-  [ membrane new-border { 2 2 } >>size { 1 1 } >>fill ] [ model>> >>model ] bi ;
-
-INSTANCE: membrane-control probe-able
-INSTANCE: wall probe-able
-INSTANCE: membrane probe-able
+TUPLE: capture pairs dermis ;
 
 GENERIC: capture-cell ( cell -- capture )
 GENERIC: uncapture-cell ( capture -- cell )
-
-TUPLE: capture pairs dermis ;
-
-TUPLE: fold sources genes drains ;
-TUPLE: chain genes ;
-
-C: <fold> fold
-C: <chain> chain
-
-MIXIN: protein
-INSTANCE: fold protein
-INSTANCE: chain protein
 
 TUPLE: gattaca text style ;
 C: <gattaca> gattaca
@@ -42,29 +25,70 @@ C: <gattaca> gattaca
 SYNTAX: .. \ ; parse-help-text default-style get <gattaca> suffix ;
 
 
-GENERIC: synthesize ( protein -- )
-: default-display ( seq -- )
+: default-display ( obj -- )
+  dup sequence? [
   [ [ {
         { [ dup capture? ] [ [ present ] [ ] bi write-object nl ] }
-        { [ dup { [ membrane-control? ] [ wall? ] } 1|| ] [ capture-cell [ present ] [ ] bi write-object nl ] }
+        { [ dup { [ membrane? ] [ wall? ] } 1|| ] [ capture-cell [ present ] [ ] bi write-object nl ] }
         { [ dup gadget? ] [ gadget. ] }
         { [ dup gattaca? ] [ gattaca. ] }
         [ . ]
       } cond 
-  ] each ] with-short-limits 
+  ] each ] with-short-limits
+  ]
+  [
+     .
+  ] if
   ;
-! use model>> instead of genes>> so that you can put normal gadgets in, treat them as normal cells, give base gadget some cell things
-M: chain synthesize genes>> default-display ;
-M: fold synthesize [ drains>> ] [ sources>> [ control-value genes>> ] map concat ] [ genes>> ] tri [ [ dup capture? [ uncapture-cell ] when ] map ] bi@
-                   [ with-datastack dup empty? [ 2drop ] ] keep
-                   '[
-                      _ default-display
-                      [
-                        {
-                              { [ dup { [ membrane-control? ] [ wall? ] } 1|| ] [ capture-cell [ ] curry <chain> swap model>> set-model ] }
-                              { [ dup gadget? ] [ <membrane> swap [ cell-coordinate ] [ parent>> ] bi swapout drop ] }
-                              [ [ ] curry <chain> swap model>> set-model ]
-                        } cond
-                         ] 2each
-                    ] if ;
+
+: synthesize ( seq dna: ( seq -- seq  ) -- seq )
+  [ [ dup capture? [ uncapture-cell ] when ] map ] bi@
+  with-datastack ;
+
+: synthesis ( models seq dna -- )
+  [ dup empty? [ 2drop ] ] dip
+  '[
+     _ default-display
+     [
+       dup gadget?
+       [ over gadget-child unparent add-gadget drop ] ! TODO also put gadget in model?
+       [
+         [ ] curry swap model>> set-model
+       ] if
+     ] 2each
+   ] if  ;
+
+: <membrane-control> ( model -- membrane )
+  f membrane-control new-pane
+  ! you're gonna need to curry that pane, son.
+  dup [ parent>> absorbing-cell [ first2 unclip-last [ concat ] [ [ synthesize ] [ synthesis ] bi ] bi* ] with-variable ] curry >>quot
+  swap >>model { 2 2 } >>gap ! 0.5 >>fill
+  ; 
+
+: <membrane-gadget> ( gadget dna: ( seq -- seq ) -- membrane )
+  [ membrane new swap add-gadget { 2 2 } >>size { 1 1 } >>fill ] [ <model> >>model ] bi* ;
+:: <membrane> ( enzymes ribozymes dna: ( seq -- seq ) -- membrane )
+  ribozymes enzymes [ model>> ] map dna <model>
+  [ suffix <product> [ 2array ] with <arrow> <membrane-control> ]
+  [ [ membrane new swap add-gadget { 2 2 } >>size { 1 1 } >>fill ] dip >>model ] bi
+  ;
+: <membrane-data> ( data -- membrane )
+  { } { } rot [ ] curry <membrane> ;
+: <membrane-model> ( model -- membrane )
+  membrane new { 2 2 } >>size { 1 1 } >>fill swap [ >>model ] [ [ [ gadget. ] each ] <arrow> <membrane-control> ] bi add-gadget ;
+: (mitosis) ( cell -- new-cell )
+    control-value clone { } { } rot <membrane> ;
+
+INSTANCE: wall probe-able
+INSTANCE: membrane probe-able
+
+TUPLE: fold sources genes drains ;
+TUPLE: chain genes ;
+
+C: <fold> fold
+C: <chain> chain
+
+MIXIN: protein
+INSTANCE: fold protein
+INSTANCE: chain protein
 

@@ -2,11 +2,14 @@ USING: ui.gadgets ui.gadgets.labels interlinks mutation images.viewer.scaling ;
 IN: scopes
 
 : with-#scope ( gadget quot -- )
-  [ [ membrane-control? ] find-parent absorbing-cell ] dip with-variable ; inline
+  [ [ membrane? ] find-parent absorbing-cell ] dip with-variable ; inline
 
 DEFER: filescope
 : (filescope) ( str pathname -- gadget )
-  [ <label> ] [ absolute-path '[ [ [ _ filescope ] vertical #@ gene-expression ] with-#scope ] <roll-button> ] bi* ;
+  [ <label> ] [ absolute-path '[ [
+    ! [ _ filescope ] vertical #@ gene-expression
+    #@ cell-coordinates vertical { 1 1 } _ filescope '[ 3drop _ 1array [ <membrane-data> ] matrix-map <wall> 1array 1array ] <growth> #@ find-dermis mutate 
+    ] with-#scope ] <roll-button> ] bi* ;
 
 : filescope ( str -- presentations )
   [ current-directory get directory-files
@@ -17,9 +20,6 @@ DEFER: filescope
   ] with-directory
   ;
 
-: (freezerscope) ( button cell -- )
-  '[ [ _ control-value genes>> call( -- ) ] vertical #@ gene-expression ] with-#scope ;
-
 : ([freezer-cell]) ( cell -- quot: ( cell in-pairs out-pairs -- cells ) )
   '[ 3drop _ 1array 1array mitosis ] ;
 : [freezer-cell] ( freezer-gadget -- quot: ( cell in-pairs out-pairs -- cells ) )
@@ -29,7 +29,9 @@ DEFER: filescope
    ] with-#scope ]
   ;
 : freezerscope ( -- gadget )
-  freezer get [ >alist ] <arrow> [ [ first2 [ <label> ] dip [freezer-cell] <roll-button> gadget. ] each ] <pane-control> ;
+  freezer get [ >alist ] <arrow> [ [ first2 [ <label> ] dip
+      [freezer-cell] <roll-button>
+      ] map ] <arrow> [ [ gadget. ] each ] <pane-control> ;
 
 : ./ ( -- pathname ) current-directory get ;
 : skill-gadget ( pathname -- gadget )
@@ -51,9 +53,9 @@ DEFER: filescope
   <roll-button> ;
 
 : rgb-background-interactive ( -- gadget )
-  ## 0@ #&
-  ## 1@ #&
-  ## 2@ #&
+  ## 0@ #&>
+  ## 1@ #&>
+  ## 2@ #&>
   3array <product> #@ '[ [ genes>> ] map concat first3 1 <rgba> <solid> _ interior<< ] <pane-control>
   ;
 

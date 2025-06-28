@@ -17,7 +17,7 @@ IN: cellular
 : focus-in ( membrane -- )
   dup wall? [ gadget-child request-focus ] [ drop ] if ;
 
-{ membrane-control wall membrane } [ "highlighting" f {
+{ wall membrane } [ "highlighting" f {
   { gain-focus dye }
   { lose-focus undye }
   ! { mouse-enter tint-cell }
@@ -32,7 +32,7 @@ IN: cellular
   { T{ key-up f f "/" } highlighter-search }
 } define-command-map ] each
 
-{ membrane-control wall membrane } [ "mutating" f {
+{ wall membrane } [ "mutating" f {
   { T{ key-up f f ";" } grow-below }
   { T{ key-up f { C+ } ";" } grow-after }
   { T{ key-up f f "," } excise-below }
@@ -45,10 +45,10 @@ IN: cellular
   { T{ key-up f f "f" } freeze-colony }
   { T{ key-up f f "F" } thaw-colony }
 
-  { T{ button-up { mods { S+ } } { # 1 } } reference-cell-in-splicer }
+  { T{ button-down { mods { C+ } } { # 1 } } reference-cell-in-splicer }
 } define-command-map ] each
 
-membrane-control "splicing" f {
+membrane "splicing" f {
   { T{ key-up f f "e" } show-splicer }
 } define-command-map
 
@@ -56,12 +56,12 @@ wall "organising" f {
   { T{ key-up f f "TAB" } siphon-up }
   { T{ key-up f { C+ } "TAB" } swivel-colony }
 } define-command-map
-membrane-control "organising" f {
+membrane "organising" f {
   { T{ button-up { # 2 } } splinter }
   { T{ key-up f f "TAB" } splinter }
 } define-command-map
 
-{ membrane-control wall } [ "common" f {
+{ membrane wall } [ "common" f {
     { T{ key-down f ${ os macos? M+ A+ ? } "t" } show-active-buttons-popup }
 } define-command-map ] each
 
